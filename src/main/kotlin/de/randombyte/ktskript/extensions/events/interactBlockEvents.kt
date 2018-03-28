@@ -1,4 +1,4 @@
-package de.randombyte.ktskript.extensions
+package de.randombyte.ktskript.extensions.events
 
 import org.spongepowered.api.block.BlockSnapshot
 import org.spongepowered.api.event.block.InteractBlockEvent

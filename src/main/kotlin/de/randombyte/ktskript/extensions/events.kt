@@ -7,7 +7,7 @@ import org.spongepowered.api.event.block.InteractBlockEvent
 
 fun <T : Event> registerEvent(eventClass: Class<T>, executor: (T) -> Unit) {
     val pluginInstance = Sponge.getPluginManager().getPlugin(KtSkript.ID).get().instance.get()
-    Sponge.getEventManager().registerListener(pluginInstance, eventClass, { executor.invoke(it) })
+    EventManager.registerListener(pluginInstance, eventClass, { executor.invoke(it) })
 }
 
 inline fun <reified T : Event> registerEvent(crossinline executor: T.() -> Unit) = registerEvent(T::class.java) { executor(it) }

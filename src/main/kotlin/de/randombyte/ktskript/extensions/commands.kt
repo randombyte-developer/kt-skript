@@ -8,18 +8,6 @@ import org.spongepowered.api.command.args.CommandContext
 import org.spongepowered.api.command.spec.CommandSpec
 import org.spongepowered.api.entity.living.player.Player
 
-fun a() {
-    command("give") {
-        permission("adsad")
-        arguments(integer("number"))
-        action {
-            val player = argument<Player>("player")
-            val h = player.health
-            println("$h!")
-        }
-    }
-}
-
 fun command(vararg names: String, commandBuilder: CommandSpec.Builder.() -> Unit) {
     val builder = CommandSpec.builder()
     commandBuilder.invoke(builder)

@@ -6,6 +6,7 @@ import de.randombyte.ktskript.KtSkript.Companion.ID
 import de.randombyte.ktskript.KtSkript.Companion.NAME
 import de.randombyte.ktskript.KtSkript.Companion.VERSION
 import de.randombyte.ktskript.extensions.CommandManager
+import de.randombyte.ktskript.extensions.EventManager
 import org.slf4j.Logger
 import org.spongepowered.api.config.ConfigDir
 import org.spongepowered.api.event.Listener
@@ -60,10 +61,13 @@ class KtSkript @Inject constructor(
 
     private fun reloadAllScripts() {
         CommandManager.getOwnedBy(this).map(CommandManager::removeMapping)
+        EventManager.unregisterPluginListeners(this)
 
         scriptsManager.clear()
         scriptsManager.loadFromPath(scriptDir.toFile())
         scriptsManager.runAllScriptsSafely()
+
+        EventManager.registerListeners(this, this)
 
         logger.info("Loaded ${scriptsManager.scripts.size} script(s).")
     }

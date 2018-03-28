@@ -13,10 +13,15 @@ class ScriptsManager {
                 """
                     import de.randombyte.ktskript.extensions.*;
                     import de.randombyte.ktskript.extensions.messages.*;
+                    import de.randombyte.ktskript.extensions.particles.*;
+                    import de.randombyte.ktskript.extensions.events.*;
 
                     import org.spongepowered.api.command.args.GenericArguments.*;
                     import org.spongepowered.api.data.key.Keys.*;
                     import org.spongepowered.api.text.chat.ChatTypes.*;
+                    import org.spongepowered.api.effect.particle.ParticleTypes.*;
+                    import org.spongepowered.api.util.Color.*;
+                    import org.spongepowered.api.item.FireworkShapes.*;
 
                     import org.spongepowered.api.entity.living.player.*;
                 """.trimIndent()
