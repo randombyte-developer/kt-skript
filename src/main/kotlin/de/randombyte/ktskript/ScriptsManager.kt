@@ -22,12 +22,14 @@ class ScriptsManager {
                 """.trimIndent()
     }
 
-    private val scriptEngine = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
+    private var scriptEngine = newEngine()
 
     val scripts: MutableMap<String, CompiledScript> = mutableMapOf()
 
+    private fun newEngine() = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
+
     fun clear() {
-        scriptEngine.state.history.reset()
+        scriptEngine = newEngine()
         scripts.clear()
     }
 
@@ -35,7 +37,7 @@ class ScriptsManager {
      * @return the successfully read scripts
      */
     fun loadFromPath(path: File): Map<String, CompiledScript> {
-        val compiledScripts = path.walk()
+        val scriptFiles = path.walk()
                 .filter { file ->
                     if (file.isDirectory) return@filter false
                     if (file.extension == "ktskript") true else {
@@ -44,9 +46,21 @@ class ScriptsManager {
                     }
                 }
                 .map { it.nameWithoutExtension to it }
-                .filter { (id, file) ->
+                .toMap() // this call actually prevents strange double code executions in the filter closure
+
+        // check duplicate use of IDs
+        val scriptIdOccurrences = mutableMapOf<String, Int>()
+        scriptFiles.forEach { (id, _) -> scriptIdOccurrences[id] = (scriptIdOccurrences[id] ?: 0) + 1 }
+        val duplicatedIds = scriptIdOccurrences.filter { (_, count) -> count > 1 }
+        duplicatedIds.forEach { (id, count) ->
+            KtSkript.logger.error("Ignoring scripts '$id': Multiple use of script ID '$id'($count times)!")
+        }
+        if (duplicatedIds.isNotEmpty()) return emptyMap()
+
+        val compiledScripts =
+                scriptFiles.filter { (id, file) ->
                     if (!scripts.containsKey(id)) true else {
-                        KtSkript.logger.warn("Ignoring already used script id '$id' at '${file.absolutePath}'!")
+                        KtSkript.logger.warn("Ignoring already used script ID '$id' at '${file.absolutePath}'!")
                         false
                     }
                 }
