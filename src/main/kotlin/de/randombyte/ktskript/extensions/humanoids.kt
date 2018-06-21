@@ -1,6 +1,5 @@
 package de.randombyte.ktskript.extensions
 
-import de.randombyte.kosp.extensions.toText
 import org.spongepowered.api.command.CommandException
 import org.spongepowered.api.data.type.HandTypes
 import org.spongepowered.api.entity.EntityTypes
@@ -26,7 +25,7 @@ fun Humanoid.give(itemStack: ItemStack) { // todo more general: Any.give()?
             val itemEntity = location.extent.createEntity(EntityTypes.ITEM, location.position)
             itemEntity.representedItem = itemStack.createSnapshot()
             if (!location.extent.spawnEntity(itemEntity)) {
-                throw CommandException("Couldn't spawn Item!".toText())
+                throw CommandException("Couldn't spawn Item!".t)
             }
         }
     }

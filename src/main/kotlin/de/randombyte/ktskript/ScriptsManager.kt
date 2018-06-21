@@ -12,9 +12,9 @@ class ScriptsManager {
         val IMPORTS =
                 """
                     import de.randombyte.ktskript.extensions.*;
-                    import de.randombyte.ktskript.extensions.messages.*;
                     import de.randombyte.ktskript.extensions.particles.*;
                     import de.randombyte.ktskript.extensions.events.*;
+                    import de.randombyte.ktskript.extensions.commands.*;
 
                     import org.spongepowered.api.command.args.GenericArguments.*;
                     import org.spongepowered.api.data.key.Keys.*;
@@ -22,6 +22,8 @@ class ScriptsManager {
                     import org.spongepowered.api.effect.particle.ParticleTypes.*;
                     import org.spongepowered.api.util.Color.*;
                     import org.spongepowered.api.item.FireworkShapes.*;
+                    import org.spongepowered.api.block.BlockTypes.*;
+                    import org.spongepowered.api.entity.EntityTypes.*;
 
                     import org.spongepowered.api.entity.living.player.*;
                 """.trimIndent()

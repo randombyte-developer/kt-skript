@@ -63,9 +63,13 @@ class KtSkript @Inject constructor(
         CommandManager.getOwnedBy(this).map(CommandManager::removeMapping)
         EventManager.unregisterPluginListeners(this)
 
-        scriptsManager.clear()
-        scriptsManager.loadFromPath(scriptDir.toFile())
-        scriptsManager.runAllScriptsSafely()
+        try {
+            scriptsManager.clear()
+            scriptsManager.loadFromPath(scriptDir.toFile())
+            scriptsManager.runAllScriptsSafely()
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
 
         EventManager.registerListeners(this, this)
 
