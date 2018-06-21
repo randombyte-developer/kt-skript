@@ -16,7 +16,7 @@ fun command(vararg names: String, commandBuilder: CommandSpec.Builder.() -> Unit
     CommandManager.register(KtSkript, builder.build(), *names)
 }
 
-fun CommandSpec.Builder.action(onlyPlayers: Boolean = true, executor: CommandExecutorContext.() -> Any) {
+fun CommandSpec.Builder.action(onlyPlayers: Boolean = false, executor: CommandExecutorContext.() -> Any) {
     executor { src, args ->
         if (onlyPlayers && src !is Player) throw CommandException("Command must be executed by a player!".t)
         val result = executor(CommandExecutorContext(src, args))

@@ -4,6 +4,7 @@ import de.randombyte.ktskript.extensions.KtSkript
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
 import java.io.File
+import java.nio.file.Path
 import javax.script.CompiledScript
 import javax.script.ScriptException
 
@@ -26,6 +27,13 @@ class ScriptsManager {
                     import org.spongepowered.api.entity.EntityTypes.*;
 
                     import org.spongepowered.api.entity.living.player.*;
+                """.trimIndent()
+
+        fun generateHelpers(scriptPath: Path) =
+                """
+                    import java.nio.file.Paths;
+
+                    val scriptPath = Paths.get("${scriptPath.toAbsolutePath()}")
                 """.trimIndent()
     }
 
@@ -72,7 +80,10 @@ class ScriptsManager {
                     }
                 }
                 .map { (id, file) -> Triple(id, file, file.readText()) }
-                .map { (id, file, content) -> Triple(id, file, "$IMPORTS\n$content") }
+                .map { (id, file, content) ->
+                    val helpers = generateHelpers(file.toPath())
+                    Triple(id, file, "$IMPORTS\n$helpers\n$content")
+                }
                 .mapNotNull { (id, file, content) ->
                     val compiledScript = try {
                         scriptEngine.compile(content)
