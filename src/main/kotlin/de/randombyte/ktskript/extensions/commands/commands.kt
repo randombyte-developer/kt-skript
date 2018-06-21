@@ -16,11 +16,11 @@ fun command(vararg names: String, commandBuilder: CommandSpec.Builder.() -> Unit
     CommandManager.register(KtSkript, builder.build(), *names)
 }
 
-fun CommandSpec.Builder.action(onlyPlayers: Boolean = true, executor: CommandExecutorContext.() -> Unit) {
+fun CommandSpec.Builder.action(onlyPlayers: Boolean = true, executor: CommandExecutorContext.() -> Any) {
     executor { src, args ->
         if (onlyPlayers && src !is Player) throw CommandException("Command must be executed by a player!".t)
-        executor(CommandExecutorContext(src, args))
-        CommandResult.success()
+        val result = executor(CommandExecutorContext(src, args))
+        return@executor result as? CommandResult ?: CommandResult.success()
     }
 }
 
