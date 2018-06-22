@@ -1,65 +1,46 @@
 package de.randombyte.ktskript
 
-import de.randombyte.ktskript.extensions.KtSkript
+import de.randombyte.ktskript.utils.KtSkript
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
-import java.io.File
 import java.nio.file.Path
 import javax.script.CompiledScript
 import javax.script.ScriptException
 
 class ScriptsManager {
     companion object {
-        val IMPORTS =
+        fun generateHelpers(script: Script) =
                 """
-                    import de.randombyte.ktskript.extensions.*;
-                    import de.randombyte.ktskript.extensions.particles.*;
-                    import de.randombyte.ktskript.extensions.events.*;
-                    import de.randombyte.ktskript.extensions.commands.*;
-
-                    import org.spongepowered.api.command.args.GenericArguments.*;
-                    import org.spongepowered.api.data.key.Keys.*;
-                    import org.spongepowered.api.text.chat.ChatTypes.*;
-                    import org.spongepowered.api.effect.particle.ParticleTypes.*;
-                    import org.spongepowered.api.util.Color.*;
-                    import org.spongepowered.api.item.FireworkShapes.*;
-                    import org.spongepowered.api.block.BlockTypes.*;
-                    import org.spongepowered.api.entity.EntityTypes.*;
-
-                    import org.spongepowered.api.entity.living.player.*;
-                """.trimIndent()
-
-        fun generateHelpers(scriptPath: Path) =
-                """
-                    import java.nio.file.Paths;
-
-                    val scriptPath = Paths.get("${scriptPath.toAbsolutePath()}")
+                    val script = ${script.toCode()}
                 """.trimIndent()
     }
 
     private var scriptEngine = newEngine()
 
-    val scripts: MutableMap<String, CompiledScript> = mutableMapOf()
+    var imports = ""
+
+    class InternalScript(val path: Path, val compiledScript: CompiledScript)
+    val scripts: MutableMap<String, InternalScript> = mutableMapOf()
 
     private fun newEngine() = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
 
     fun clear() {
-        scriptEngine = newEngine()
         scripts.clear()
+        imports = ""
+    }
+
+    fun loadImports(path: Path) {
+        val newImports = getFiles(path, extension = "imports")
+                .map { it.readText() }
+                .joinToString(separator = "\n")
+        imports += "\n$newImports\n"
     }
 
     /**
      * @return the successfully read scripts
      */
-    fun loadFromPath(path: File): Map<String, CompiledScript> {
-        val scriptFiles = path.walk()
-                .filter { file ->
-                    if (file.isDirectory) return@filter false
-                    if (file.extension == "ktskript") true else {
-                        KtSkript.logger.warn("Ignoring file '${file.absolutePath}'!")
-                        false
-                    }
-                }
+    fun loadScripts(path: Path): Map<String, InternalScript> {
+        val scriptFiles = getFiles(path, extension = "ktskript")
                 .map { it.nameWithoutExtension to it }
                 .toMap() // this call actually prevents strange double code executions in the filter closure
 
@@ -81,18 +62,25 @@ class ScriptsManager {
                 }
                 .map { (id, file) -> Triple(id, file, file.readText()) }
                 .map { (id, file, content) ->
-                    val helpers = generateHelpers(file.toPath())
-                    Triple(id, file, "$IMPORTS\n$helpers\n$content")
+
+                    val scriptString = """
+                        $imports
+                        $content
+                        ${generateHelpers(Script(path))}
+                    """.trimIndent()
+
+                    Triple(id, file, scriptString)
                 }
                 .mapNotNull { (id, file, content) ->
                     val compiledScript = try {
+                        scriptEngine = newEngine() // reset engine because there might be errors from previous scripts
                         scriptEngine.compile(content)
                     } catch (ex: ScriptException) {
                         KtSkript.logger.error("Ignoring faulty script '$id' at '${file.absolutePath}'!")
                         ex.printStackTrace()
                         return@mapNotNull null
                     }
-                    id to compiledScript
+                    id to InternalScript(file.toPath(), compiledScript)
                 }
                 .toMap()
 
@@ -101,9 +89,17 @@ class ScriptsManager {
     }
 
     /**
+     * This tries to run all scripts. If any script fails to execute, it is removed from [scripts]
+     * and the remaining script are then again tried to be executed, until all were tried. This is due
+     * to the script enging
+     *
      * @see runScriptsSafely
      */
-    fun runAllScriptsSafely() = runScriptsSafely(*scripts.keys.toTypedArray())
+    fun runAllScriptsSafely() {
+        do {
+            val result = runScriptsSafely(*scripts.keys.toTypedArray())
+        } while (result.values.any { success -> !success })
+    }
 
     /**
      * @return if the specific scripts were run successfully
@@ -119,12 +115,20 @@ class ScriptsManager {
     fun runScriptSafely(id: String): Boolean {
         val script = scripts[id] ?: throw IllegalArgumentException("No script available with id '$id'!")
         try {
-            script.eval()
+            script.compiledScript.eval()
         } catch (ex: ScriptException) {
             KtSkript.logger.error("Can not run script '$id'!", ex)
             scripts.remove(id)
             return false
         }
         return true
+    }
+
+    private fun getFiles(path: Path, extension: String) = path.toFile().walk().filter { file ->
+        if (file.isDirectory) return@filter false
+        if (file.extension == extension) true else {
+            KtSkript.logger.warn("Ignoring file '${file.absolutePath}'!")
+            false
+        }
     }
 }

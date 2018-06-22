@@ -1,0 +1,22 @@
+import de.randombyte.ktskript.*;
+import de.randombyte.ktskript.utils.*;
+import de.randombyte.ktskript.utils.commands.*;
+import de.randombyte.ktskript.utils.events.*;
+import de.randombyte.ktskript.utils.particles.*;
+import de.randombyte.ktskript.utils.serializers.*;
+
+import org.spongepowered.api.command.args.GenericArguments.*;
+import org.spongepowered.api.data.key.Keys.*;
+import org.spongepowered.api.text.chat.ChatTypes.*;
+import org.spongepowered.api.effect.particle.ParticleTypes.*;
+import org.spongepowered.api.util.Color.*;
+import org.spongepowered.api.item.FireworkShapes.*;
+import org.spongepowered.api.block.BlockTypes.*;
+import org.spongepowered.api.entity.EntityTypes.*;
+import org.spongepowered.api.data.type.HandTypes.*;
+
+import org.spongepowered.api.entity.living.player.*;
+import org.spongepowered.api.service.economy.EconomyService;
+
+import de.randombyte.byteitems.ByteItemsApi;
+import me.rojo8399.placeholderapi.PlaceholderService;

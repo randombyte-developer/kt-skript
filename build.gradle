@@ -11,6 +11,7 @@ repositories {
     jcenter()
     maven { url "https://repo.spongepowered.org/maven/" }
     maven { url "http://repo.bstats.org/content/repositories/releases" }
+    maven { url "https://jitpack.io" }
 }
 
 configurations {
@@ -23,6 +24,8 @@ dependencies {
     shadow "org.jetbrains.kotlin:kotlin-compiler:1.2.50"
     shadow "org.jetbrains.kotlin:kotlin-script-util:1.2.50"
     kapt "org.spongepowered:spongeapi:7.0.0"
+    compile "com.github.randombyte-developer:PlaceholderAPI:v4.5.1"
+    compile "com.github.randombyte-developer:byte-items:v2.2.6"
 //    shadow "org.bstats:bstats-sponge:1.2"
 }
 
