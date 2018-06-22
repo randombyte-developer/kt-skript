@@ -14,10 +14,20 @@ import org.spongepowered.api.item.inventory.ItemStack
  * 3. dropping it onto the ground
  */
 fun Humanoid.give(itemStack: ItemStack) { // todo more general: Any.give()?
-    if (!hasItemInHand()) {
+    fun ItemStack.singleCopy(): ItemStack = copy().apply { quantity = 1 }
+
+    val itemInHand = getItemInHand(HandTypes.MAIN_HAND).orNull()
+
+    if (itemInHand == null) {
         // nothing in hand -> put item in hand
         setItemInHand(HandTypes.MAIN_HAND, itemStack)
     } else {
+        if (itemInHand.singleCopy().equalTo(itemStack.singleCopy())) {
+            itemInHand.quantity += itemStack.quantity
+            setItemInHand(HandTypes.MAIN_HAND, itemInHand)
+            return
+        }
+
         // something in hand -> place item somewhere in inventory
         val success = (this as Carrier).give(itemStack)
         if (!success) {

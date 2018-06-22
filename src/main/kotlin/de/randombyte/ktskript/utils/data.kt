@@ -12,18 +12,19 @@ private inline fun <reified T : DataManipulator<*, *>> DataHolder.getOrThrow() =
     IllegalArgumentException("'${this::class.java.simpleName}' doesn't support '${T::class.simpleName}'!")
 }
 
+// todo: how to improve the mess? plus the upcoming additions?
 
 var DataHolder.health: Double
     get() = getOrThrow<HealthData>().health().get()
-    set(value) { getOrThrow<HealthData>().health().set(value) }
+    set(value) { offer(getOrThrow<HealthData>().health().set(value)) }
 
 var DataHolder.invisible: Boolean
     get() = getOrThrow<InvisibilityData>().invisible().get()
-    set(value) { getOrThrow<InvisibilityData>().invisible().set(value) }
+    set(value) { offer(getOrThrow<InvisibilityData>().invisible().set(value)) }
 
 var DataHolder.vanished: Boolean
     get() = getOrThrow<InvisibilityData>().vanish().get()
-    set(value) { getOrThrow<InvisibilityData>().vanish().set(value) }
+    set(value) { offer(getOrThrow<InvisibilityData>().vanish().set(value)) }
 
 val DataHolder.isSneaking: Boolean
     get() = getOrThrow<SneakingData>().sneaking().get()
@@ -31,4 +32,4 @@ val DataHolder.isSneaking: Boolean
 
 var DataHolder.representedItem: ItemStackSnapshot
     get() = getOrThrow<RepresentedItemData>().item().get()
-    set(value) { getOrThrow<RepresentedItemData>().item().set(value) }
+    set(value) { offer(getOrThrow<RepresentedItemData>().item().set(value)) }

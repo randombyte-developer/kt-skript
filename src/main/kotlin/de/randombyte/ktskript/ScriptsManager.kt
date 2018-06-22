@@ -1,14 +1,18 @@
 package de.randombyte.ktskript
 
 import de.randombyte.ktskript.utils.KtSkript
+import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
+import org.spongepowered.api.Sponge
 import java.nio.file.Path
 import javax.script.CompiledScript
 import javax.script.ScriptException
 
 class ScriptsManager {
     companion object {
+        val importPackages = arrayOf("org.spongepowered.api")
+
         fun generateHelpers(script: Script) =
                 """
                     val script = ${script.toCode()}
@@ -30,10 +34,20 @@ class ScriptsManager {
     }
 
     fun loadImports(path: Path) {
-        val newImports = getFiles(path, extension = "imports")
-                .map { it.readText() }
-                .joinToString(separator = "\n")
-        imports += "\n$newImports\n"
+        val classPathImportPackages = FastClasspathScanner(*importPackages)
+                .addClassLoader(Sponge::class.java.classLoader)
+                .scan()
+                .namesOfAllClasses
+                .map { it.substringBeforeLast(".") }
+                .filter { it.isNotEmpty() }
+
+        val fileImportPackages = getFiles(path, extension = "imports")
+                .flatMap { it.readLines().filter(String::isNotBlank).asSequence() }
+
+        val newImports = (classPathImportPackages.toSet() + fileImportPackages)
+                .joinToString(separator = "\n") { "import $it.*;" }
+
+        imports += newImports
     }
 
     /**
