@@ -6,6 +6,7 @@ import de.randombyte.ktskript.KtSkriptPlugin.Companion.ID
 import de.randombyte.ktskript.KtSkriptPlugin.Companion.NAME
 import de.randombyte.ktskript.KtSkriptPlugin.Companion.VERSION
 import de.randombyte.ktskript.config.ConfigAccessors
+import de.randombyte.ktskript.script.ScriptsManager
 import de.randombyte.ktskript.utils.CommandManager
 import de.randombyte.ktskript.utils.EventManager
 import org.slf4j.Logger

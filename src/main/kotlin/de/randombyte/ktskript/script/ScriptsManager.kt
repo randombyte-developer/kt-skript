@@ -1,9 +1,7 @@
-package de.randombyte.ktskript
+package de.randombyte.ktskript.script
 
 import de.randombyte.ktskript.utils.KtSkript
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner
-import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
-import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
 import java.io.File
 import java.nio.file.Path
 import javax.script.CompiledScript
@@ -20,8 +18,9 @@ class ScriptsManager {
     class InternalScript(val path: Path, val compiledScript: CompiledScript)
     val scripts: MutableMap<String, InternalScript> = mutableMapOf()
 
-    private var scriptEngine = newEngine()
-    private fun newEngine() = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
+    private val allClasspathFiles = lazy { getAsMuchClasspathAsPossible().map { it.absoluteFile } }
+
+    private fun newEngine(templateClasspath: List<File>) = MyKotlinJsr223JvmLocalScriptEngineFactory(templateClasspath).scriptEngine
 
     var globalImports = ""
 
@@ -34,20 +33,21 @@ class ScriptsManager {
      * @return Import statements for all classes from the packages specified in the given [file]
      */
     fun loadImportsFromFile(file: File): String {
-        val globalDefaultImportPackages = file
+        val packagePrefixes = file
                 .readLines()
                 .filter { it.isNotBlank() }
                 .toTypedArray()
 
-        val globalClassPathImportPackages = FastClasspathScanner(*globalDefaultImportPackages)
-                .apply { overrideClassLoaders(*findBestClassLoader()) }
+        val classPathImportPackages = FastClasspathScanner(*packagePrefixes)
+                .overrideClasspath(allClasspathFiles.value)
+                .alwaysScanClasspathElementRoot()
                 .scan()
                 .namesOfAllClasses
                 .map { it.substringBeforeLast(".") } // snip away class name
                 .filter { it.isNotEmpty() }
                 .toSet() // ensure uniqueness
 
-        val newImports = globalClassPathImportPackages
+        val newImports = classPathImportPackages
                 .joinToString(separator = "\n") { "import $it.*;" }
 
         return newImports
@@ -116,13 +116,12 @@ class ScriptsManager {
                         ${generateHelpers(Script(path))}
                     """.trimIndent()
 
-                    println(scriptString)
-
                     Triple(id, file, scriptString)
                 }
                 .mapNotNull { (id, file, scriptString) ->
                     val compiledScript = try {
-                        scriptEngine = newEngine() // reset engine because there might be errors from previous scripts
+                        // reset engine because there might be errors from previous scripts
+                        val scriptEngine = newEngine(allClasspathFiles.value)
                         scriptEngine.compile(scriptString)
                     } catch (ex: ScriptException) {
                         KtSkript.logger.error("Ignoring faulty script '$id' at '${file.absolutePath}'!")

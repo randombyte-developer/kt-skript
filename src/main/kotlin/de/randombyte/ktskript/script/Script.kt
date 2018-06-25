@@ -1,4 +1,4 @@
-package de.randombyte.ktskript
+package de.randombyte.ktskript.script
 
 import java.nio.file.Path
 

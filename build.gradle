@@ -21,9 +21,10 @@ configurations {
 
 dependencies {
     shadow("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.50")
-    shadow("org.jetbrains.kotlin:kotlin-compiler:1.2.50") { transitive = false }
-    shadow("org.jetbrains.kotlin:kotlin-script-util:1.2.50") { transitive = false }
-    shadow("io.github.lukehutch:fast-classpath-scanner:2.9.5") { transitive = false }
+    shadow("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.2.50")
+    shadow("org.jetbrains.kotlin:kotlin-script-util:1.2.50") { transitive = false}
+    shadow("org.jetbrains.kotlin:kotlin-reflect:1.2.50")
+    shadow("io.github.lukehutch:fast-classpath-scanner:2.9.5")
     kapt "org.spongepowered:spongeapi:7.0.0"
     compile "com.github.randombyte-developer:PlaceholderAPI:v4.5.1"
     compile "com.github.randombyte-developer:byte-items:v2.2.6"
@@ -35,19 +36,27 @@ jar.enabled = false
 shadowJar {
     configurations = [project.configurations.shadow]
 
-    relocate "kotlin", "de.randombyte.ktskript.shaded.kotlin"
+    //relocate "kotlin", "de.randombyte.ktskript.shaded.kotlin"
     relocate "io.github.lukehutch.fastclasspathscanner", "de.randombyte.ktskript.shaded.fcs"
     relocate "org.bstats", "de.randombyte.ktskript.shaded.bstats"
 
-    relocate "com", "de.randombyte.shaded.others.com"
-    relocate "gnu", "de.randombyte.shaded.others.gnu"
-    relocate "javaslang", "de.randombyte.shaded.others.javaslang"
-    relocate "javax", "de.randombyte.shaded.others.javax"
-    relocate "messages", "de.randombyte.shaded.others.messages"
-    relocate "misc", "de.randombyte.shaded.others.misc"
-    relocate "net", "de.randombyte.shaded.others.net"
-    relocate "one", "de.randombyte.shaded.others.one"
-    relocate "org", "de.randombyte.shaded.others.org"
+    def packages = [
+            "com.google.common.base", "com.google.common.collect", "com.google.common.math", "com.google.common.primitives", "com.google.common.util",
+            "com.google.gwt",
+            "com.intellij",
+            "com.sun",
+            "gnu.trove",
+            "javaslang",
+            "javax.inject",
+            "net.jpountz",
+            "one.util",
+            "org.apache", "org.fusesource", "org.intellij", "org.iq80", "org.jdom", /*"org.jetbrains",*/ "org.jline", "org.picocontainer",
+            "net.rubygrapefruit"
+    ]
+
+    packages.forEach {
+        relocate it, "de.randombyte.ktskript.shaded.$it"
+    }
 
     classifier = null // Remove "-all" suffix from output file name
 }
