@@ -4,51 +4,74 @@ import de.randombyte.ktskript.utils.KtSkript
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
-import org.spongepowered.api.Sponge
+import java.io.File
 import java.nio.file.Path
 import javax.script.CompiledScript
 import javax.script.ScriptException
 
 class ScriptsManager {
     companion object {
-        val importPackages = arrayOf("org.spongepowered.api")
-
         fun generateHelpers(script: Script) =
                 """
                     val script = ${script.toCode()}
                 """.trimIndent()
     }
 
-    private var scriptEngine = newEngine()
-
-    var imports = ""
-
     class InternalScript(val path: Path, val compiledScript: CompiledScript)
     val scripts: MutableMap<String, InternalScript> = mutableMapOf()
 
+    private var scriptEngine = newEngine()
     private fun newEngine() = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
+
+    var globalImports = ""
 
     fun clear() {
         scripts.clear()
-        imports = ""
+        globalImports = ""
     }
 
-    fun loadImports(path: Path) {
-        val classPathImportPackages = FastClasspathScanner(*importPackages)
-                .addClassLoader(Sponge::class.java.classLoader)
+    /**
+     * @return Import statements for all classes from the packages specified in the given [file]
+     */
+    fun loadImportsFromFile(file: File): String {
+        val globalDefaultImportPackages = file
+                .readLines()
+                .filter { it.isNotBlank() }
+                .toTypedArray()
+
+        val globalClassPathImportPackages = FastClasspathScanner(*globalDefaultImportPackages)
+                .apply { overrideClassLoaders(*findBestClassLoader()) }
                 .scan()
                 .namesOfAllClasses
-                .map { it.substringBeforeLast(".") }
+                .map { it.substringBeforeLast(".") } // snip away class name
                 .filter { it.isNotEmpty() }
+                .toSet() // ensure uniqueness
 
-        val fileImportPackages = getFiles(path, extension = "imports")
-                .flatMap { it.readLines().filter(String::isNotBlank).asSequence() }
-
-        val newImports = (classPathImportPackages.toSet() + fileImportPackages)
+        val newImports = globalClassPathImportPackages
                 .joinToString(separator = "\n") { "import $it.*;" }
 
-        imports += newImports
+        return newImports
     }
+
+    /**
+     * Loads all classes from the packages specified in the given [path] which should point to the
+     * "default.imports" file.
+     *
+     * @param path [Path] to the root config dir
+     */
+    fun loadGlobalImports(path: Path) {
+        globalImports += loadImportsFromFile(path.resolve("default.imports").toFile())
+    }
+
+    /**
+     * Loads all classes from the packages specified in the given [file] which should point to the
+     * script specific ".imports" file.
+     *
+     * @param file [Path] to the ".imports" file
+     *
+     * @return all import statements from the file
+     */
+    fun loadScriptSpecificImports(file: File): String = loadImportsFromFile(file)
 
     /**
      * @return the successfully read scripts
@@ -56,39 +79,51 @@ class ScriptsManager {
     fun loadScripts(path: Path): Map<String, InternalScript> {
         val scriptFiles = getFiles(path, extension = "ktskript")
                 .map { it.nameWithoutExtension to it }
-                .toMap() // this call actually prevents strange double code executions in the filter closure
+                .toList()
 
         // check duplicate use of IDs
-        val scriptIdOccurrences = mutableMapOf<String, Int>()
-        scriptFiles.forEach { (id, _) -> scriptIdOccurrences[id] = (scriptIdOccurrences[id] ?: 0) + 1 }
-        val duplicatedIds = scriptIdOccurrences.filter { (_, count) -> count > 1 }
+        val duplicatedIds = scriptFiles
+                .groupBy { (id, _) -> id }
+                .mapValues { (_, occurrences) -> occurrences.count() }
+                .filter { (_, count) -> count > 1 }
+
         duplicatedIds.forEach { (id, count) ->
             KtSkript.logger.error("Ignoring scripts '$id': Multiple use of script ID '$id'($count times)!")
         }
         if (duplicatedIds.isNotEmpty()) return emptyMap()
 
-        val compiledScripts =
-                scriptFiles.filter { (id, file) ->
-                    if (!scripts.containsKey(id)) true else {
+        // put imports into script and compile everything
+        val compiledScripts = scriptFiles
+                .toMap() // uniqueness of keys is now guaranteed
+                .filter { (id, file) ->
+                    if (id in scripts.keys) {
                         KtSkript.logger.warn("Ignoring already used script ID '$id' at '${file.absolutePath}'!")
                         false
-                    }
+                    } else true
                 }
                 .map { (id, file) -> Triple(id, file, file.readText()) }
-                .map { (id, file, content) ->
+                .map { (id, file, scriptContent) ->
+
+                    val importsFile = File(file.nameWithoutExtension + ".imports")
+                    val scriptSpecificImports: String? = if (importsFile.exists() && importsFile.isFile) {
+                        loadScriptSpecificImports(importsFile)
+                    } else null
 
                     val scriptString = """
-                        $imports
-                        $content
+                        $globalImports
+                        ${scriptSpecificImports.orEmpty()}
+                        $scriptContent
                         ${generateHelpers(Script(path))}
                     """.trimIndent()
 
+                    println(scriptString)
+
                     Triple(id, file, scriptString)
                 }
-                .mapNotNull { (id, file, content) ->
+                .mapNotNull { (id, file, scriptString) ->
                     val compiledScript = try {
                         scriptEngine = newEngine() // reset engine because there might be errors from previous scripts
-                        scriptEngine.compile(content)
+                        scriptEngine.compile(scriptString)
                     } catch (ex: ScriptException) {
                         KtSkript.logger.error("Ignoring faulty script '$id' at '${file.absolutePath}'!")
                         ex.printStackTrace()

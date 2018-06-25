@@ -59,6 +59,11 @@ fun String.replace(values: Map<String, String>): String {
 
 // API safe wrappers
 
+object Static {
+    // fixed the wrong pattern in placeholder api itself...
+    val PLACEHOLDER_PATTERN = "[%]([^ %]+)[%]".toRegex()
+}
+
 /**
  * Tries to process the placeholders if PlaceholderAPI is loaded.
  */
@@ -67,7 +72,7 @@ fun String.tryReplacePlaceholders(source: Any? = null, observer: Any? = null): S
 
     val placeholderService = PlaceholderService::class.service
 
-    val placeholders = placeholderService.defaultPattern.toRegex()
+    val placeholders = Static.PLACEHOLDER_PATTERN
             .findAll(this)
             .map { matchResult -> matchResult.groupValues[1] }.toList()
     val replacements = placeholders.mapNotNull { placeholder ->

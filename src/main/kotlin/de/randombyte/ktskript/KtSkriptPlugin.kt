@@ -36,7 +36,7 @@ class KtSkriptPlugin @Inject constructor(
         const val VERSION = "1.0"
         const val AUTHOR = "RandomByte"
 
-        const val defaultImportsFileName = "default.imports"
+        const val DEFAULT_IMPORTS_FILE_NAME = "default.imports"
     }
 
     private val scriptsManager = ScriptsManager()
@@ -44,15 +44,12 @@ class KtSkriptPlugin @Inject constructor(
     val configAccessors = ConfigAccessors(configPath)
 
     val scriptDir = configPath.resolve("scripts")
-    val globalImportsDir = configPath.resolve("global-imports")
 
     init {
         if (Files.notExists(scriptDir)) Files.createDirectory(scriptDir)
-        if (Files.notExists(globalImportsDir)) Files.createDirectory(globalImportsDir)
     }
 
     private var scriptsWatcher: FolderWatcher? = null
-    private var importsWatcher: FolderWatcher? = null
 
     @Listener
     fun onInit(event: GameInitializationEvent) {
@@ -75,15 +72,8 @@ class KtSkriptPlugin @Inject constructor(
 
     private fun setupFolderWatchers() {
         scriptsWatcher?.stop()
-        importsWatcher?.stop()
-
         scriptsWatcher = FolderWatcher(scriptDir, configAccessors.general.get().updateInterval) {
             logger.info("Detected changes in the scripts folder.")
-            reloadAllScripts()
-        }
-
-        importsWatcher = FolderWatcher(globalImportsDir, configAccessors.general.get().updateInterval) {
-            logger.info("Detected changes in the imports folder.")
             reloadAllScripts()
         }
     }
@@ -94,7 +84,7 @@ class KtSkriptPlugin @Inject constructor(
 
         try {
             scriptsManager.clear()
-            scriptsManager.loadImports(globalImportsDir)
+            scriptsManager.loadGlobalImports(configPath)
             scriptsManager.loadScripts(scriptDir)
             scriptsManager.runAllScriptsSafely()
         } catch (ex: Exception) {
@@ -107,6 +97,6 @@ class KtSkriptPlugin @Inject constructor(
     }
 
     private fun copyDefaultImportsIfNecessary() {
-        pluginContainer.getAsset(defaultImportsFileName).get().copyToDirectory(globalImportsDir, false, true)
+        pluginContainer.getAsset(DEFAULT_IMPORTS_FILE_NAME).get().copyToDirectory(configPath, false, true)
     }
 }
