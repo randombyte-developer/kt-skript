@@ -9,6 +9,7 @@ import de.randombyte.ktskript.config.ConfigAccessors
 import de.randombyte.ktskript.script.ScriptsManager
 import de.randombyte.ktskript.utils.CommandManager
 import de.randombyte.ktskript.utils.EventManager
+import org.bstats.sponge.Metrics
 import org.slf4j.Logger
 import org.spongepowered.api.config.ConfigDir
 import org.spongepowered.api.event.Listener
@@ -27,7 +28,7 @@ import java.nio.file.Path
 class KtSkriptPlugin @Inject constructor(
         val logger: Logger,
         @ConfigDir(sharedRoot = false) private val configPath: Path,
-        //private val bStats: Metrics,
+        private val bStats: Metrics,
         private val pluginContainer: PluginContainer
 ) {
 
@@ -40,7 +41,7 @@ class KtSkriptPlugin @Inject constructor(
         const val DEFAULT_IMPORTS_FILE_NAME = "default.imports"
     }
 
-    private val scriptsManager = ScriptsManager()
+    val scriptsManager = ScriptsManager()
 
     val configAccessors = ConfigAccessors(configPath)
 

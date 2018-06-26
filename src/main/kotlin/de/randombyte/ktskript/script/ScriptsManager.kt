@@ -92,12 +92,19 @@ class ScriptsManager {
         }
         if (duplicatedIds.isNotEmpty()) return emptyMap()
 
+        val alreadyCompiledScripts = mutableMapOf<String, InternalScript>()
+
+        val generalConfig = KtSkript.configAccessors.general.get()
+
         // put imports into script and compile everything
         val compiledScripts = scriptFiles
                 .toMap() // uniqueness of keys is now guaranteed
                 .filter { (id, file) ->
                     if (id in scripts.keys) {
-                        KtSkript.logger.warn("Ignoring already used script ID '$id' at '${file.absolutePath}'!")
+                        if (generalConfig.warnAboutDuplicates) {
+                            KtSkript.logger.warn("Ignoring already used script ID '$id' at '${file.absolutePath}'!")
+                        }
+                        alreadyCompiledScripts += id to scripts.getValue(id)
                         false
                     } else true
                 }
@@ -112,11 +119,11 @@ class ScriptsManager {
                     val scriptString = """
                         $globalImports
                         ${scriptSpecificImports.orEmpty()}
-                        $scriptContent
                         ${generateHelpers(Script(path))}
+                        $scriptContent
                     """.trimIndent()
 
-                    if (KtSkript.configAccessors.general.get().outputScripts) {
+                    if (generalConfig.outputScripts) {
                         KtSkript.logger.info("Script '$id':\n$scriptString")
                     }
 
@@ -137,7 +144,8 @@ class ScriptsManager {
                 .toMap()
 
         scripts += compiledScripts
-        return compiledScripts
+
+        return compiledScripts + alreadyCompiledScripts
     }
 
     /**
