@@ -116,6 +116,10 @@ class ScriptsManager {
                         ${generateHelpers(Script(path))}
                     """.trimIndent()
 
+                    if (KtSkript.configAccessors.general.get().outputScripts) {
+                        KtSkript.logger.info("Script '$id':\n$scriptString")
+                    }
+
                     Triple(id, file, scriptString)
                 }
                 .mapNotNull { (id, file, scriptString) ->
@@ -139,7 +143,7 @@ class ScriptsManager {
     /**
      * This tries to run all scripts. If any script fails to execute, it is removed from [scripts]
      * and the remaining script are then again tried to be executed, until all were tried. This is due
-     * to the script enging
+     * to the script engine being dumb about errors.
      *
      * @see runScriptsSafely
      */

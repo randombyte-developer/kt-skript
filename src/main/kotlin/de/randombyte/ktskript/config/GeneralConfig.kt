@@ -6,10 +6,13 @@ import java.time.Duration
 
 @ConfigSerializable class GeneralConfig(
         @Setting("script-update-interval", comment = "How often the script files should be checked for changes.")
-            val updateInterval: Duration = Duration.ZERO
+            val updateInterval: Duration = Duration.ZERO,
+        @Setting("output-scripts-to-console", comment = "Useful for debugging the imports.")
+            val outputScripts: Boolean = false
 ) {
     // default config
     constructor() : this(
-            updateInterval = Duration.ofSeconds(3)
+            updateInterval = Duration.ofSeconds(3),
+            outputScripts = false
     )
 }

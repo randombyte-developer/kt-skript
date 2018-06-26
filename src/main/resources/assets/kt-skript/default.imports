@@ -1,10 +1,7 @@
+!
+-com.google
+-javax
+
+java.io
 org.spongepowered.api
-
 de.randombyte.ktskript
-de.randombyte.ktskript.utils
-de.randombyte.ktskript.utils.commands
-de.randombyte.ktskript.utils.events
-de.randombyte.ktskript.utils.particles
-de.randombyte.ktskript.utils.serializers
-
-java.nio.file
