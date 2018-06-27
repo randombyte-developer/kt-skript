@@ -1,0 +1,12 @@
+onBlockBreak {
+  if (causedByPlayer) {
+    blockChanges.forEach { blockChange ->
+      if (blockChange.original.type == BlockTypes.DIAMOND_ORE) {
+        if (!causingPlayer.isSneaking) {
+          cancelEvent()
+          causingPlayer.sendMessage("&cYou can't mine diamonds, hehe".t)
+        }
+      }
+    }
+  }
+}

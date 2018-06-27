@@ -1,0 +1,10 @@
+onBlockRightClick {
+  if (causedByPlayer && causingPlayer.hasPermission("cowspawn") && !clickedInAir && causingPlayer.isSneaking) {
+      val clickedBlock = targetBlock.blockLocation
+      val spawnLocation = clickedBlock.add(v3(0, 1, 0))
+      val cow = spawnLocation.createEntity(EntityTypes.COW)
+
+      spawnLocation.world.spawnEntity(cow)
+      causingPlayer.sendMessage("&2Cow spawned!".t)
+  }
+}

@@ -9,6 +9,7 @@ import org.spongepowered.api.command.CommandSource
 import org.spongepowered.api.command.args.CommandContext
 import org.spongepowered.api.command.spec.CommandSpec
 import org.spongepowered.api.entity.living.player.Player
+import org.spongepowered.api.text.Text
 
 fun registerCommand(vararg names: String, commandBuilder: CommandSpec.Builder.() -> Unit) {
     CommandManager.register(KtSkript, command(commandBuilder), *names)
@@ -29,6 +30,8 @@ fun CommandSpec.Builder.action(onlyPlayers: Boolean = false, executor: CommandEx
         return@executor result as? CommandResult ?: CommandResult.success()
     }
 }
+
+fun commandError(errorText: Text): Nothing = throw CommandException(errorText)
 
 data class CommandExecutorContext(val commandSource: CommandSource, val arguments: CommandContext) {
     val player: Player

@@ -13,6 +13,8 @@ import org.bstats.sponge.Metrics
 import org.slf4j.Logger
 import org.spongepowered.api.config.ConfigDir
 import org.spongepowered.api.event.Listener
+import org.spongepowered.api.event.cause.Cause
+import org.spongepowered.api.event.cause.EventContext
 import org.spongepowered.api.event.game.GameReloadEvent
 import org.spongepowered.api.event.game.state.GameInitializationEvent
 import org.spongepowered.api.plugin.Plugin
@@ -46,6 +48,8 @@ class KtSkriptPlugin @Inject constructor(
     val configAccessors = ConfigAccessors(configPath)
 
     val scriptDir = configPath.resolve("scripts")
+
+    val cause = Cause.builder().append(this).build(EventContext.empty())
 
     init {
         if (Files.notExists(scriptDir)) Files.createDirectory(scriptDir)

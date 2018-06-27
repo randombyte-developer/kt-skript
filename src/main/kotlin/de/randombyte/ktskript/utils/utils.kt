@@ -7,7 +7,7 @@ import org.spongepowered.api.data.key.Keys
 import org.spongepowered.api.entity.living.player.User
 import org.spongepowered.api.util.Identifiable
 
-internal inline val KtSkript: KtSkriptPlugin get() = PluginManager.getPlugin(KtSkriptPlugin.ID).get().instance.get() as KtSkriptPlugin
+inline val KtSkript: KtSkriptPlugin get() = PluginManager.getPlugin(KtSkriptPlugin.ID).get().instance.get() as KtSkriptPlugin
 
 val Any.bestName: String get() = when {
     this is User -> name

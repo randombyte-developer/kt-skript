@@ -23,12 +23,15 @@ fun Humanoid.give(itemStack: ItemStack) { // todo more general: Any.give()?
         setItemInHand(HandTypes.MAIN_HAND, itemStack)
     } else {
         if (itemInHand.singleCopy().equalTo(itemStack.singleCopy())) {
-            itemInHand.quantity += itemStack.quantity
-            setItemInHand(HandTypes.MAIN_HAND, itemInHand)
-            return
+            val newQuantity = itemInHand.quantity + itemStack.quantity
+            if (newQuantity <= itemInHand.type.maxStackQuantity) {
+                itemInHand.quantity = newQuantity
+                setItemInHand(HandTypes.MAIN_HAND, itemInHand)
+                return
+            }
         }
 
-        // something in hand -> place item somewhere in inventory
+        // something in hand or exceeds max quantity -> place item somewhere in inventory
         val success = (this as Carrier).give(itemStack)
         if (!success) {
             // inventory full -> spawn as item

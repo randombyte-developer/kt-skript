@@ -1,7 +1,19 @@
-!
--com.google
--javax
+!!
 
-java.io
+-sun
+-com.google
+
+-javax
+-java.awt
+-java.applet
+
+-kotlin.reflect
+-kotlin.internal
+
+-de.randombyte.ktskript.shaded
+
+kotlin
+java
+
 org.spongepowered.api
 de.randombyte.ktskript

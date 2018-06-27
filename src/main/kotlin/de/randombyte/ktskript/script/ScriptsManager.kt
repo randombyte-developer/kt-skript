@@ -11,6 +11,7 @@ class ScriptsManager {
     companion object {
         fun generateHelpers(script: Script) =
                 """
+                    typealias KtSkriptScript = de.randombyte.ktskript.script.Script
                     val script = ${script.toCode()}
                 """.trimIndent()
     }

@@ -1,0 +1,44 @@
+val offers: Map<ItemType, BigDecimal> = mapOf(
+  ItemTypes.SADDLE to 30,
+  ItemTypes.SHIELD to 10,
+  ItemTypes.TNT to 5
+).mapValues { (_, costs) -> costs.toBigDecimal() }
+
+registerCommand("buy") {
+  arguments(
+    catalogedElement<ItemType>("item"),
+    integer("amount")
+  )
+  action(onlyPlayers = true) {
+    val itemType = argument<ItemType>("item")
+    val amount = argument<Int>("amount")
+
+    if (amount < 1) {
+      commandError("Invalid 'amount'!".t)
+    }
+
+    if (itemType !in offers.keys) {
+      commandError("Can't buy this item!".t)
+    }
+
+    if (!EconomyService::class.isAvailable()) {
+      commandError("No economy plugin loaded!".t)
+    }
+
+    val ecoService = EconomyService::class.service
+
+    val acc = player.economyAccount
+    val bal = acc.getBalance(ecoService.defaultCurrency)
+    val costs = offers[itemType]!!
+
+    if (bal < costs) {
+      commandError("You don't have enough money to buy that!".t)
+    }
+
+    acc.withdraw(ecoService.defaultCurrency, costs, KtSkript.cause)
+
+    val itemStack = ItemStack.of(itemType, amount)
+    player.give(itemStack)
+    player.sendMessage("You bought $amount x ${itemType.id}!".t.green())
+  }
+}
