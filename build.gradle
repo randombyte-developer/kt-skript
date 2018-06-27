@@ -37,21 +37,14 @@ shadowJar {
     configurations = [project.configurations.shadow]
 
     //relocate "kotlin", "de.randombyte.ktskript.shaded.kotlin"
-    relocate "io.github.lukehutch.fastclasspathscanner", "de.randombyte.ktskript.shaded.fcs"
-    relocate "org.bstats", "de.randombyte.ktskript.shaded.bstats"
 
     def packages = [
-            "com.google.common.base", "com.google.common.collect", "com.google.common.math", "com.google.common.primitives", "com.google.common.util",
-            "com.google.gwt",
-            "com.intellij",
-            "com.sun",
-            "gnu.trove",
+            "io.github.lukehutch.fastclasspathscanner",
             "javaslang",
-            "javax.inject",
-            "net.jpountz",
+            "net.jpountz", "net.rubygrapefruit",
             "one.util",
-            "org.apache", "org.fusesource", "org.intellij", "org.iq80", "org.jdom", /*"org.jetbrains",*/ "org.jline", "org.picocontainer",
-            "net.rubygrapefruit"
+            "org.bstats", "org.intellij", "org.iq80",
+            "org.jetbrains.ide", "org.jetbrains.org.objectweb.asm"
     ]
 
     packages.forEach {

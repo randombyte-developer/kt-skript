@@ -6,7 +6,7 @@ fun randomDouble(start: Double = 0.0, end: Double) = RandomUtils.nextDouble(star
 
 fun randomInt(start: Int = 0, end: Int) = RandomUtils.nextInt(start, end)
 
-fun randomBoolean(chance: Double = 0.5) = randomDouble(start = 0.0, end = 1.0) < chance.coerceIn(0.1..1.0)
+fun randomBoolean(chance: Double = 0.5) = randomDouble(start = 0.0, end = 1.0) < chance.coerceIn(0.0..1.0)
 
 val <T> List<T>.randomElement
     get() = get(randomInt(start = 0, end = lastIndex))

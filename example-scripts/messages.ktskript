@@ -1,0 +1,15 @@
+onPlayerJoin {
+  setMessage("&2${player.name} &rjust joined the server!".t)
+}
+
+onPlayerLeave {
+  setMessage(player.name.darkRed() + " left the server!".white())
+}
+
+onPlayerDeath {
+  setMessage("${player.name} died!".red())
+}
+
+registerEvent<AdvancementEvent.Grant> {
+  setMessage("${player.name} just got the achievement ".t + advancement.toText() + ".".t)
+}

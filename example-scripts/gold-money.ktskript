@@ -1,0 +1,18 @@
+onBlockBreak {
+  if (causedByPlayer) {
+    blockChanges.forEach { blockChange ->
+      if (blockChange.original.type == BlockTypes.GOLD_ORE) {
+        val moneyInBlock = randomBoolean(chance = 0.05)
+        if (moneyInBlock) {
+
+          val moneyAmount = randomInt(start = 300, end = 500)
+
+          val eco = EconomyService::class.service
+          causingPlayer.economyAccount.deposit(eco.defaultCurrency, moneyAmount.toBigDecimal(), KtSkript.cause)
+
+          causingPlayer.sendMessage("You found $moneyAmount coins!".green())
+        }
+      }
+    }
+  }
+}

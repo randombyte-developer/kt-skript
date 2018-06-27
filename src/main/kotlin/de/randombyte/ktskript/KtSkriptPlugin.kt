@@ -9,6 +9,7 @@ import de.randombyte.ktskript.config.ConfigAccessors
 import de.randombyte.ktskript.script.ScriptsManager
 import de.randombyte.ktskript.utils.CommandManager
 import de.randombyte.ktskript.utils.EventManager
+import de.randombyte.ktskript.utils.Scheduler
 import org.bstats.sponge.Metrics
 import org.slf4j.Logger
 import org.spongepowered.api.config.ConfigDir
@@ -84,19 +85,26 @@ class KtSkriptPlugin @Inject constructor(
         }
     }
 
-    private fun reloadAllScripts() {
+    private fun tidyUp() {
         CommandManager.getOwnedBy(this).map(CommandManager::removeMapping)
         EventManager.unregisterPluginListeners(this)
+        Scheduler.getScheduledTasks(this).forEach { it.cancel() }
+    }
 
+    private fun reloadAllScripts() {
+        tidyUp()
         try {
-            scriptsManager.clear()
-            scriptsManager.loadGlobalImports(configPath)
-            scriptsManager.loadScripts(scriptDir)
-            scriptsManager.runAllScriptsSafely()
+            with(scriptsManager) {
+                clear()
+                loadGlobalImports(configPath)
+                loadScripts(scriptDir)
+                runAllScriptsSafely()
+            }
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
 
+        // Register our own reload event listener again
         EventManager.registerListeners(this, this)
 
         logger.info("Loaded ${scriptsManager.scripts.size} script(s).")

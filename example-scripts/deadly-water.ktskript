@@ -1,0 +1,16 @@
+val damageSource = DamageSource.builder()
+  .type(DamageTypes.MAGIC)
+  .build()
+
+Task.builder()
+  .intervalTicks(10)
+  .execute { ->
+    Server.onlinePlayers
+      .forEach { player ->
+        val playerBlockType = player.location.block.type
+        if (playerBlockType == BlockTypes.FLOWING_WATER || playerBlockType == BlockTypes.WATER) {
+          player.damage(1, damageSource) // 1 = half a heart
+        }
+      }
+  }
+  .submit(KtSkript)

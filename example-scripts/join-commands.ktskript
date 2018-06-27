@@ -1,0 +1,11 @@
+onPlayerJoin {
+  val commands = listOf(
+    "nucleus:warp ${player.name} main-spawn",
+    "title times 5 30 5", // read the minecraft wiki to learn more about this command
+    """title ${player.name} title {"text": "Welcome!", "color": "blue"}"""
+  )
+
+  commands.forEach { command ->
+    Server.console.executeCommand(command)
+  }
+}
