@@ -1,0 +1,6 @@
+onPlayerMove {
+  val groundBlock = toTransform.location.add(v3(0, -1, 0))
+  if (groundBlock.block.type == BlockTypes.SPONGE) {
+    player.velocity = v3(0.0, 0.5, 0.0)
+  }
+}

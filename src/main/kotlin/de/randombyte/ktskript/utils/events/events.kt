@@ -1,5 +1,9 @@
-package de.randombyte.ktskript.utils
+package de.randombyte.ktskript.utils.events
 
+import de.randombyte.ktskript.utils.EventManager
+import de.randombyte.ktskript.utils.KtSkript
+import org.spongepowered.api.entity.EntityTypes
+import org.spongepowered.api.entity.living.player.Player
 import org.spongepowered.api.event.Event
 import org.spongepowered.api.event.block.ChangeBlockEvent
 import org.spongepowered.api.event.block.InteractBlockEvent
@@ -28,6 +32,8 @@ fun onEntityRightClick(executor: InteractEntityEvent.Secondary.MainHand.() -> Un
 
 fun onEntityMove(executor: MoveEntityEvent.() -> Unit) = registerEvent(executor)
 
+fun onPlayerMove(executor: MoveEntityEvent.() -> Unit) = onEntityMove { if (targetEntity.type == EntityTypes.PLAYER) executor() }
+
 // BLOCKS
 
 fun onBlockBreak(executor: ChangeBlockEvent.Break.() -> Unit) = registerEvent(executor)
@@ -51,3 +57,7 @@ fun onPlayerLogin(executor: ClientConnectionEvent.Login.() -> Unit) = registerEv
 fun onPlayerJoin(executor: ClientConnectionEvent.Join.() -> Unit) = registerEvent(executor)
 
 fun onPlayerLeave(executor: ClientConnectionEvent.Disconnect.() -> Unit) = registerEvent(executor)
+
+fun onPlayerDamage(executor: DamageEntityEvent.() -> Unit) = onEntityDamage { if (targetEntity is Player) executor() }
+
+fun onPlayerDeath(executor: DestructEntityEvent.Death.() -> Unit) = onEntityDeath { if (targetEntity is Player) executor() }
