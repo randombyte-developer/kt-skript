@@ -1,0 +1,7 @@
+mapOf<String, Function<*>>(
+  "kickAllPlayers" to { reason: Text ->
+    Server.onlinePlayers.forEach { player ->
+      player.kick(reason)
+    }
+  }
+)

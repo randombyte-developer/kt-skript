@@ -1,0 +1,13 @@
+val libPath = script.path.parent.resolve("basic-lib.ktskript")
+val scripts = script.compile(libPath)
+if ("basic-lib" !in scripts.keys) throw RuntimeException("Lib not found!")
+
+val lib = scripts["basic-lib"]!!.compiledScript.eval() as Map<String, Function<*>>
+val kickAllPlayers: (reason: Text) -> Unit = lib["kickAllPlayers"]!! as Function1<Text, Unit>
+
+// Might sometimes be useful... </troll>
+registerCommand("clearlag") {
+  action {
+    kickAllPlayers("Clearing lag...".t)
+  }
+}
