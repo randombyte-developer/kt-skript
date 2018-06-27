@@ -1,5 +1,6 @@
 package de.randombyte.ktskript.utils.events
 
+import de.randombyte.ktskript.script.UnloadScriptsEvent
 import de.randombyte.ktskript.utils.EventManager
 import de.randombyte.ktskript.utils.KtSkript
 import org.spongepowered.api.entity.EntityTypes
@@ -61,3 +62,7 @@ fun onPlayerLeave(executor: ClientConnectionEvent.Disconnect.() -> Unit) = regis
 fun onPlayerDamage(executor: DamageEntityEvent.() -> Unit) = onEntityDamage { if (targetEntity is Player) executor() }
 
 fun onPlayerDeath(executor: DestructEntityEvent.Death.() -> Unit) = onEntityDeath { if (targetEntity is Player) executor() }
+
+// OTHERS
+
+fun onScriptsUnload(executor: UnloadScriptsEvent.() -> Unit) = registerEvent(executor)

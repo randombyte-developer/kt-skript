@@ -1,0 +1,28 @@
+val configLoader = script.path.parent.resolve("tracking-data.conf").toConfigurationLoader()
+
+val rootNode = configLoader.load()
+val dirtBlocksNode = rootNode.getNode("dirt")
+
+onBlockBreak {
+  if (causedByPlayer) {
+    blockChanges.forEach { blockChange ->
+      if (blockChange.original.type == BlockTypes.DIRT) {
+        val alreadyMined = dirtBlocksNode.getInt(0) // 0 is the default value if the config was empty before
+        dirtBlocksNode.setValue(alreadyMined + 1)
+      }
+    }
+  }
+}
+
+onScriptsUnload {
+  if (script.id in scripts) { // yep, we are being unloaded
+    configLoader.save(rootNode)
+  }
+}
+
+registerCommand("dirtblocks") {
+  action {
+    val amount = dirtBlocksNode.getInt(0)
+    commandSource.sendMessage("$amount dirt blocks mined in total on this server!".t)
+  }
+}

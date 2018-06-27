@@ -7,6 +7,7 @@ import de.randombyte.ktskript.KtSkriptPlugin.Companion.NAME
 import de.randombyte.ktskript.KtSkriptPlugin.Companion.VERSION
 import de.randombyte.ktskript.config.ConfigAccessors
 import de.randombyte.ktskript.script.ScriptsManager
+import de.randombyte.ktskript.script.UnloadScriptsEvent
 import de.randombyte.ktskript.utils.CommandManager
 import de.randombyte.ktskript.utils.EventManager
 import de.randombyte.ktskript.utils.Scheduler
@@ -18,6 +19,7 @@ import org.spongepowered.api.event.cause.Cause
 import org.spongepowered.api.event.cause.EventContext
 import org.spongepowered.api.event.game.GameReloadEvent
 import org.spongepowered.api.event.game.state.GameInitializationEvent
+import org.spongepowered.api.event.game.state.GameStoppingServerEvent
 import org.spongepowered.api.plugin.Plugin
 import org.spongepowered.api.plugin.PluginContainer
 import java.nio.file.Files
@@ -70,6 +72,11 @@ class KtSkriptPlugin @Inject constructor(
         logger.info("Reloaded!")
     }
 
+    @Listener
+    fun onStopping(event: GameStoppingServerEvent) {
+        postUnloadScriptsEvent()
+    }
+
     private fun reload() {
         copyDefaultImportsIfNecessary()
         configAccessors.reloadAll()
@@ -92,6 +99,9 @@ class KtSkriptPlugin @Inject constructor(
     }
 
     private fun reloadAllScripts() {
+        // Notify scripts to enable them to save configs
+        postUnloadScriptsEvent()
+
         tidyUp()
         try {
             with(scriptsManager) {
@@ -108,6 +118,10 @@ class KtSkriptPlugin @Inject constructor(
         EventManager.registerListeners(this, this)
 
         logger.info("Loaded ${scriptsManager.scripts.size} script(s).")
+    }
+
+    private fun postUnloadScriptsEvent() {
+        EventManager.post(UnloadScriptsEvent(scriptsManager.scripts.keys.toList(), cause))
     }
 
     private fun copyDefaultImportsIfNecessary() {

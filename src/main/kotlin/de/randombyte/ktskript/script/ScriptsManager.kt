@@ -9,6 +9,7 @@ import javax.script.ScriptException
 
 class ScriptsManager {
     companion object {
+        // doing the typealias thing here because 'Script' is apparently already used somewhere in the imported packages
         fun generateHelpers(script: Script) =
                 """
                     typealias KtSkriptScript = de.randombyte.ktskript.script.Script
@@ -120,7 +121,7 @@ class ScriptsManager {
                     val scriptString = """
                         $globalImports
                         ${scriptSpecificImports.orEmpty()}
-                        ${generateHelpers(Script(path))}
+                        ${generateHelpers(Script(id, file.toPath()))}
                         $scriptContent
                     """.trimIndent()
 
