@@ -11,53 +11,53 @@ import org.spongepowered.api.event.block.InteractBlockEvent
 import org.spongepowered.api.event.entity.*
 import org.spongepowered.api.event.network.ClientConnectionEvent
 
-fun <T : Event> registerEvent(eventClass: Class<T>, executor: (T) -> Unit) {
+fun <T : Event> registerListener(eventClass: Class<T>, executor: (T) -> Unit) {
     EventManager.registerListener(KtSkript, eventClass, executor::invoke)
 }
 
-inline fun <reified T : Event> registerEvent(noinline executor: T.() -> Unit) = registerEvent(T::class.java, executor)
+inline fun <reified T : Event> registerListener(noinline executor: T.() -> Unit) = registerListener(T::class.java, executor)
 
 // === EVENTS ===
 
 // INTERACTION
 
-fun onBlockLeftClick(executor: InteractBlockEvent.Primary.MainHand.() -> Unit) = registerEvent(executor)
+fun onBlockLeftClick(executor: InteractBlockEvent.Primary.MainHand.() -> Unit) = registerListener(executor)
 
-fun onBlockRightClick(executor: InteractBlockEvent.Secondary.MainHand.() -> Unit) = registerEvent(executor)
+fun onBlockRightClick(executor: InteractBlockEvent.Secondary.MainHand.() -> Unit) = registerListener(executor)
 
-fun onEntityLeftClick(executor: InteractEntityEvent.Primary.MainHand.() -> Unit) = registerEvent(executor)
+fun onEntityLeftClick(executor: InteractEntityEvent.Primary.MainHand.() -> Unit) = registerListener(executor)
 
-fun onEntityRightClick(executor: InteractEntityEvent.Secondary.MainHand.() -> Unit) = registerEvent(executor)
+fun onEntityRightClick(executor: InteractEntityEvent.Secondary.MainHand.() -> Unit) = registerListener(executor)
 
 // MOVE
 
-fun onEntityMove(executor: MoveEntityEvent.() -> Unit) = registerEvent(executor)
+fun onEntityMove(executor: MoveEntityEvent.() -> Unit) = registerListener(executor)
 
 fun onPlayerMove(executor: MoveEntityEvent.() -> Unit) = onEntityMove { if (targetEntity.type == EntityTypes.PLAYER) executor() }
 
 // BLOCKS
 
-fun onBlockBreak(executor: ChangeBlockEvent.Break.() -> Unit) = registerEvent(executor)
+fun onBlockBreak(executor: ChangeBlockEvent.Break.() -> Unit) = registerListener(executor)
 
-fun onBlockPlace(executor: ChangeBlockEvent.Place.() -> Unit) = registerEvent(executor)
+fun onBlockPlace(executor: ChangeBlockEvent.Place.() -> Unit) = registerListener(executor)
 
 // ENTITIES
 
-fun onEntitySpawn(executor: SpawnEntityEvent.ChunkLoad.() -> Unit) = registerEvent(executor)
+fun onEntitySpawn(executor: SpawnEntityEvent.ChunkLoad.() -> Unit) = registerListener(executor)
 
-fun onEntityDamage(executor: DamageEntityEvent.() -> Unit) = registerEvent(executor)
+fun onEntityDamage(executor: DamageEntityEvent.() -> Unit) = registerListener(executor)
 
-fun onEntityRemove(executor: DestructEntityEvent.() -> Unit) = registerEvent(executor)
+fun onEntityRemove(executor: DestructEntityEvent.() -> Unit) = registerListener(executor)
 
-fun onEntityDeath(executor: DestructEntityEvent.Death.() -> Unit) = registerEvent(executor)
+fun onEntityDeath(executor: DestructEntityEvent.Death.() -> Unit) = registerListener(executor)
 
 // PLAYERS
 
-fun onPlayerLogin(executor: ClientConnectionEvent.Login.() -> Unit) = registerEvent(executor)
+fun onPlayerLogin(executor: ClientConnectionEvent.Login.() -> Unit) = registerListener(executor)
 
-fun onPlayerJoin(executor: ClientConnectionEvent.Join.() -> Unit) = registerEvent(executor)
+fun onPlayerJoin(executor: ClientConnectionEvent.Join.() -> Unit) = registerListener(executor)
 
-fun onPlayerLeave(executor: ClientConnectionEvent.Disconnect.() -> Unit) = registerEvent(executor)
+fun onPlayerLeave(executor: ClientConnectionEvent.Disconnect.() -> Unit) = registerListener(executor)
 
 fun onPlayerDamage(executor: DamageEntityEvent.() -> Unit) = onEntityDamage { if (targetEntity is Player) executor() }
 
@@ -65,4 +65,4 @@ fun onPlayerDeath(executor: DestructEntityEvent.Death.() -> Unit) = onEntityDeat
 
 // OTHERS
 
-fun onScriptsUnload(executor: UnloadScriptsEvent.() -> Unit) = registerEvent(executor)
+fun onScriptsUnload(executor: UnloadScriptsEvent.() -> Unit) = registerListener(executor)

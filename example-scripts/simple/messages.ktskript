@@ -10,6 +10,6 @@ onPlayerDeath {
   setMessage("${player.name} died!".red())
 }
 
-registerEvent<AdvancementEvent.Grant> {
+registerListener<AdvancementEvent.Grant> {
   setMessage("${player.name} just got the achievement ".t + advancement.toText() + ".".t)
 }
