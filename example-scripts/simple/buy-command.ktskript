@@ -21,7 +21,7 @@ registerCommand("buy") {
       commandError("Can't buy this item!".t)
     }
 
-    if (!EconomyService::class.isAvailable()) {
+    if (!EconomyService::class.available) {
       commandError("No economy plugin loaded!".t)
     }
 
