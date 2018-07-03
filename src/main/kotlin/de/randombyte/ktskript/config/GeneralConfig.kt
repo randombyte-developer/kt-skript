@@ -10,12 +10,18 @@ import java.time.Duration
         @Setting("output-scripts-to-console", comment = "Useful for debugging the imports.")
             val outputScripts: Boolean = false,
         @Setting("warn-about-multiple-compile-requests", comment = "Read the docs to learn more.")
-            val warnAboutDuplicates: Boolean = true
+            val warnAboutDuplicates: Boolean = true,
+        @Setting("verbose-classpath-scanner", comment = "Useful for debugging the classpath. Warning: Very verbose, much console output!")
+            val verboseClasspathScanner: Boolean = false,
+        @Setting("allow-default-imports-modifications", comment = "By default the default.imports is completely ignored and just printed for convenience, read the wiki.")
+            val allowDefaultImportsModifications: Boolean = false
 ) {
     // default config
     constructor() : this(
             updateInterval = Duration.ofSeconds(3),
             outputScripts = false,
-            warnAboutDuplicates = true
+            warnAboutDuplicates = true,
+            verboseClasspathScanner = false,
+            allowDefaultImportsModifications = false
     )
 }

@@ -31,11 +31,19 @@ class FolderWatcher(val path: Path, val interval: Duration, val onChanges: () ->
     }
 
     private fun checkForChanges() {
+        var possibleException: Throwable? = null
+
         val watchKey = watchService.poll() ?: return
         if (watchKey.pollEvents().isNotEmpty()) {
-            onChanges()
+            try {
+                onChanges()
+            } catch (throwable: Throwable) {
+                possibleException = throwable
+            }
         }
+
         watchKey.reset()
+        if (possibleException != null) throw possibleException
     }
 
     fun stop() {

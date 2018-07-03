@@ -34,15 +34,17 @@ class ScriptsManager {
     /**
      * @return Import statements for all classes from the packages specified in the given [file]
      */
-    fun loadImportsFromFile(file: File): String {
+    fun loadImportsFromFile(file: File, verbose: Boolean): String {
         val packagePrefixes = file
                 .readLines()
                 .filter { it.isNotBlank() }
                 .toTypedArray()
 
         val classPathImportPackages = FastClasspathScanner(*packagePrefixes)
+                .verbose(verbose)
                 .overrideClasspath(allClasspathFiles.value)
-                .alwaysScanClasspathElementRoot()
+                .alwaysScanClasspathElementRoot(false)
+                .strictWhitelist()
                 .scan()
                 .namesOfAllClasses
                 .map { it.substringBeforeLast(".") } // snip away class name
@@ -61,8 +63,8 @@ class ScriptsManager {
      *
      * @param path [Path] to the root config dir
      */
-    fun loadGlobalImports(path: Path) {
-        globalImports += loadImportsFromFile(path.resolve("default.imports").toFile())
+    fun loadGlobalImports(path: Path, verbose: Boolean) {
+        globalImports += loadImportsFromFile(path.resolve("default.imports").toFile(), verbose)
     }
 
     /**
@@ -73,7 +75,7 @@ class ScriptsManager {
      *
      * @return all import statements from the file
      */
-    fun loadScriptSpecificImports(file: File): String = loadImportsFromFile(file)
+    fun loadScriptSpecificImports(file: File, verbose: Boolean): String = loadImportsFromFile(file, verbose)
 
     /**
      * @return the successfully read scripts
@@ -98,9 +100,9 @@ class ScriptsManager {
 
         val generalConfig = KtSkript.configAccessors.general.get()
 
-        // put imports into script and compile everything
         val compiledScripts = scriptFiles
                 .toMap() // uniqueness of keys is now guaranteed
+                // filter already used script IDs
                 .filter { (id, file) ->
                     if (id in scripts.keys) {
                         if (generalConfig.warnAboutDuplicates) {
@@ -110,12 +112,14 @@ class ScriptsManager {
                         false
                     } else true
                 }
+                // read script file
                 .map { (id, file) -> Triple(id, file, file.readText()) }
+                // add imports and the Script helper object
                 .map { (id, file, scriptContent) ->
 
-                    val importsFile = File(file.nameWithoutExtension + ".imports")
+                    val importsFile = File(file.parent, file.nameWithoutExtension + ".imports")
                     val scriptSpecificImports: String? = if (importsFile.exists() && importsFile.isFile) {
-                        loadScriptSpecificImports(importsFile)
+                        loadScriptSpecificImports(importsFile, verbose = generalConfig.verboseClasspathScanner)
                     } else null
 
                     val scriptString = """
@@ -131,6 +135,7 @@ class ScriptsManager {
 
                     Triple(id, file, scriptString)
                 }
+                // compile script
                 .mapNotNull { (id, file, scriptString) ->
                     val compiledScript = try {
                         // reset engine because there might be errors from previous scripts
@@ -151,16 +156,10 @@ class ScriptsManager {
     }
 
     /**
-     * This tries to run all scripts. If any script fails to execute, it is removed from [scripts]
-     * and the remaining script are then again tried to be executed, until all were tried. This is due
-     * to the script engine being dumb about errors.
-     *
-     * @see runScriptsSafely
+     * This tries to run all scripts. If any script fails to execute, it is removed from [scripts].
      */
     fun runAllScriptsSafely() {
-        do {
-            val result = runScriptsSafely(*scripts.keys.toTypedArray())
-        } while (result.values.any { success -> !success })
+        runScriptsSafely(*scripts.keys.toTypedArray())
     }
 
     /**
@@ -187,10 +186,6 @@ class ScriptsManager {
     }
 
     private fun getFiles(path: Path, extension: String) = path.toFile().walk().filter { file ->
-        if (file.isDirectory) return@filter false
-        if (file.extension == extension) true else {
-            KtSkript.logger.warn("Ignoring file '${file.absolutePath}'!")
-            false
-        }
+        file.isFile && file.extension == extension
     }
 }
