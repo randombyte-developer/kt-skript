@@ -1,0 +1,41 @@
+// =====================
+// ===== lib setup =====
+// =====================
+
+typealias ForgeEvent = net.minecraftforge.fml.common.eventhandler.Event
+
+// load lib
+val forgeEventsLibId = "forge-events-lib"
+val forgeEventsLibPath = script.path.parent.resolve(forgeEventsLibId + ".ktskript")
+val scripts = script.compile(forgeEventsLibPath)
+val forgeEventsLibScript = scripts[forgeEventsLibId] ?: throw RuntimeException("$forgeEventsLibId not found!")
+
+val forgeEventsLibFunctions = forgeEventsLibScript.compiledScript.eval() as Map<String, Function<*>>
+
+// extract the functions into lambdas
+val registerForgeListenerLambda: (eventClass: Class<out ForgeEvent>, priority: EventPriority, filterCanceled: Tristate, listener: Function1<in ForgeEvent, Unit>) -> IEventListener =
+  forgeEventsLibFunctions["registerForgeListener"]!! as Function4<Class<out ForgeEvent>, EventPriority, Tristate, Function1<ForgeEvent, Unit>, IEventListener>
+
+val unregisterForgeListener: (listener: IEventListener) -> Unit =
+  forgeEventsLibFunctions["unregisterForgeListener"]!! as Function1<IEventListener, Unit>
+
+// wrap this specific lambda into a function to get generics, this is not needed but nice for compile time type safety
+inline fun <reified T : ForgeEvent> registerForgeListener(
+  priority: EventPriority = EventPriority.NORMAL,
+  isCancelled: Tristate = Tristate.FALSE,
+  noinline executor: T.() -> Unit
+): IEventListener = registerForgeListenerLambda(T::class.java, priority, isCancelled, executor as Function1<ForgeEvent, Unit>)
+
+// =======================================
+// ===== actual script starting here =====
+// =======================================
+
+val listener = registerForgeListener<DifficultyChangeEvent> {
+  println("Event called!")
+}
+
+onScriptsUnload {
+  if (script.id in scripts) {
+    unregisterForgeListener(listener)
+  }
+}

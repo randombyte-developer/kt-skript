@@ -1,0 +1,50 @@
+typealias ForgeEvent = net.minecraftforge.fml.common.eventhandler.Event
+
+val eventListeners = ForgeEvent::class.java.getDeclaredField("listeners").apply { isAccessible = true }.get(null) as ListenerList
+val busId = EventBus::class.java.getDeclaredField("busID").apply { isAccessible = true }.get(MinecraftForge.EVENT_BUS) as Int
+
+fun <T : ForgeEvent> registerForgeListener(
+  eventClass: Class<T>,
+  priority: EventPriority = EventPriority.NORMAL,
+  filterCanceled: Tristate = Tristate.FALSE,
+  listener: (T) -> Unit
+): IEventListener {
+  val iEventListener = IEventListener { event ->
+
+    val passedCancellationFilter = when {
+      !event.isCancelable -> true
+      filterCanceled == Tristate.UNDEFINED -> true
+      filterCanceled == Tristate.FALSE && !event.isCanceled -> true
+      filterCanceled == Tristate.TRUE && event.isCanceled -> true
+     else -> false
+    }
+
+    if (passedCancellationFilter) {
+      val passedEventClassFilter = when {
+        eventClass.isAssignableFrom(event::class.java) -> true
+        else -> false
+      }
+
+      if (passedEventClassFilter) {
+        listener.invoke(event as T)
+      }
+    }
+  }
+
+  eventListeners.register(busId, priority, iEventListener)
+  return iEventListener
+}
+
+// without generics, because lambdas don't support them; generic can be "re-enabled" through a function on the library-caller side
+val registerForgeListenerLambda = { eventClass: Class<ForgeEvent>, priority: EventPriority, filterCanceled: Tristate, listener: (ForgeEvent) -> Unit ->
+    registerForgeListener(eventClass, priority, filterCanceled, listener)
+}
+
+val libFunctions = mapOf(
+  "registerForgeListener" to registerForgeListenerLambda,
+  "unregisterForgeListener" to { listener: IEventListener ->
+    eventListeners.unregister(busId, listener)
+  }
+)
+
+libFunctions
