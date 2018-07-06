@@ -6,9 +6,13 @@ import java.nio.file.Path
 
 class Script(val id: String, val path: Path) {
 
+    companion object {
+        const val THREE_QUOTES = "\"\"\""
+    }
+
     // This could be implemented with bindings but it seems to be more readable for now
     fun toCode() = """
-        KtSkriptScript("$id", Paths.get("${path.toAbsolutePath()}"))
+        KtSkriptScript("$id", Paths.get($THREE_QUOTES${path.toAbsolutePath()}$THREE_QUOTES))
     """.trimIndent()
 
     /**
