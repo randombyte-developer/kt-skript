@@ -20,7 +20,8 @@ class ScriptsManager {
     class InternalScript(val path: Path, val compiledScript: CompiledScript)
     val scripts: MutableMap<String, InternalScript> = mutableMapOf()
 
-    private val allClasspathFiles = lazy { getAsMuchClasspathAsPossible().map { it.absoluteFile } }
+    private val notAllClasspathFiles = lazy { getClasspathFromClassloaders().map { it.absoluteFile } }
+    private val allClasspathFiles = mutableSetOf<File>()
 
     private fun newEngine(templateClasspath: List<File>) = MyKotlinJsr223JvmLocalScriptEngineFactory(templateClasspath).scriptEngine
 
@@ -40,13 +41,16 @@ class ScriptsManager {
                 .filter { it.isNotBlank() }
                 .toTypedArray()
 
-        val classPathImportPackages = FastClasspathScanner(*packagePrefixes)
+         val scanResult = FastClasspathScanner(*packagePrefixes)
                 .verbose(verbose)
-                .overrideClasspath(allClasspathFiles.value)
-                .alwaysScanClasspathElementRoot(false)
+                .overrideClasspath(notAllClasspathFiles.value)
+                .alwaysScanClasspathElementRoot(true)
                 .strictWhitelist()
                 .scan()
-                .namesOfAllClasses
+
+        allClasspathFiles += (scanResult.uniqueClasspathElements + notAllClasspathFiles.value)
+
+        val classPathImportPackages = scanResult.namesOfAllClasses
                 .map { it.substringBeforeLast(".") } // snip away class name
                 .filter { it.isNotEmpty() }
                 .toSet() // ensure uniqueness
@@ -139,7 +143,8 @@ class ScriptsManager {
                 .mapNotNull { (id, file, scriptString) ->
                     val compiledScript = try {
                         // reset engine because there might be errors from previous scripts
-                        val scriptEngine = newEngine(allClasspathFiles.value)
+                        val scriptEngine = newEngine(notAllClasspathFiles.value)
+                        println(notAllClasspathFiles.value.joinToString(separator = "\n") { "= $it" })
                         scriptEngine.compile(scriptString)
                     } catch (ex: ScriptException) {
                         KtSkript.logger.error("Ignoring faulty script '$id' at '${file.absolutePath}'!")

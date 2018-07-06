@@ -4,5 +4,6 @@ import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner
 import org.jetbrains.kotlin.script.util.classpathFromClassloader
 import org.jetbrains.kotlin.utils.PathUtil
 
-fun getAsMuchClasspathAsPossible() = FastClasspathScanner().findBestClassLoader()
+fun getClasspathFromClassloaders() = FastClasspathScanner()
+        .findBestClassLoader()
         .flatMap { classpathFromClassloader(it)!! } + PathUtil.getJdkClassesRootsFromCurrentJre()
