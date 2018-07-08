@@ -1,0 +1,9 @@
+registerListener<MoveEntityEvent.Teleport> {
+  val entity = targetEntity
+  if (entity is Player) {
+    val toWorld = toTransform.extent
+    if (toWorld.dimension.type == DimensionTypes.NETHER) {
+      entity.sendMessage("You were sent to the Nether!".t)
+    }
+  }
+}
