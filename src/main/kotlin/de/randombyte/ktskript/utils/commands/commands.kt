@@ -37,12 +37,12 @@ data class CommandExecutorContext(val commandSource: CommandSource, val argument
     val player: Player
         get() {
             if (commandSource !is Player) {
-                throw CommandException("The command source is not a player! Use 'executor(onlyPlayers = true)'.".t)
+                throw CommandException("The command source is not a player! Use 'action(onlyPlayers = true) { ... }'.".t)
             }
             return commandSource
         }
 
     fun <T> argument(key: String): T = arguments.getOne<T>(key).orElseThrow {
-        CommandException("Argument '$key' not present!".t)
+        CommandException("Argument '$key' is not present!".t)
     }
 }
