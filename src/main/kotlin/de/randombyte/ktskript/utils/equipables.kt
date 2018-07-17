@@ -8,7 +8,12 @@ import org.spongepowered.api.item.inventory.equipment.EquipmentTypes
 
 fun Equipable.hasItemInHand(handType: HandType = MAIN_HAND) = getEquipped(handType.equipmentType).isPresent
 
+@Deprecated("The Sponge native method takes priority over this extension function.")
 fun Equipable.getItemInHand(handType: HandType = MAIN_HAND) = getEquipped(handType.equipmentType).orElseThrow {
+    RuntimeException("Equipable '$bestName' doesn't have anything in the '${handType.name}' hand!")
+}
+
+fun Equipable.itemInHand(handType: HandType = MAIN_HAND) = getEquipped(handType.equipmentType).orElseThrow {
     RuntimeException("Equipable '$bestName' doesn't have anything in the '${handType.name}' hand!")
 }
 
