@@ -5,7 +5,6 @@ import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner
 import java.io.File
 import java.nio.file.Path
 import javax.script.CompiledScript
-import javax.script.ScriptException
 
 class ScriptsManager {
     companion object {
@@ -141,9 +140,8 @@ class ScriptsManager {
                         // reset engine because there might be errors from previous scripts
                         val scriptEngine = newEngine(allClasspathFiles.value)
                         scriptEngine.compile(scriptString)
-                    } catch (ex: ScriptException) {
-                        KtSkript.logger.error("Ignoring faulty script '$id' at '${file.absolutePath}'!")
-                        ex.printStackTrace()
+                    } catch (throwable: Throwable) {
+                        KtSkript.logger.error("Ignoring faulty script '$id' at '${file.absolutePath}'!", throwable)
                         return@mapNotNull null
                     }
                     id to InternalScript(file.toPath(), compiledScript)
@@ -177,8 +175,8 @@ class ScriptsManager {
         val script = scripts[id] ?: throw IllegalArgumentException("No script available with id '$id'!")
         try {
             script.compiledScript.eval()
-        } catch (ex: ScriptException) {
-            KtSkript.logger.error("Can not run script '$id'!", ex)
+        } catch (throwable: Throwable) {
+            KtSkript.logger.error("Can not run script '$id'!", throwable)
             scripts.remove(id)
             return false
         }

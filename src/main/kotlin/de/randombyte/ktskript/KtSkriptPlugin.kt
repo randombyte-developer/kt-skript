@@ -40,7 +40,7 @@ class KtSkriptPlugin @Inject constructor(
     companion object {
         const val ID = "kt-skript"
         const val NAME = "KtSkript"
-        const val VERSION = "1.1.1"
+        const val VERSION = "1.1.2"
         const val AUTHOR = "RandomByte"
 
         const val DEFAULT_IMPORTS_FILE_NAME = "default.imports"
@@ -95,14 +95,18 @@ class KtSkriptPlugin @Inject constructor(
     private fun tidyUp() {
         CommandManager.getOwnedBy(this).map(CommandManager::removeMapping)
         EventManager.unregisterPluginListeners(this)
-        Scheduler.getScheduledTasks(this).forEach { it.cancel() }
+        Scheduler.getScheduledTasks(this)
+                .filterNot { it.name == FolderWatcher.SCRIPTS_FOLDER_WATCHER_TASK_NAME }
+                .forEach { it.cancel() }
     }
 
     private fun reloadAllScripts() {
-        // Notify scripts to enable them to save configs
+        // Notify scripts of them being about to be unloaded to allow them to save configs
         postUnloadScriptsEvent()
 
+        // removes all left over event handlers, commands etc. of scripts
         tidyUp()
+
         try {
             with(scriptsManager) {
                 clear()
@@ -110,8 +114,8 @@ class KtSkriptPlugin @Inject constructor(
                 loadScripts(scriptDir)
                 runAllScriptsSafely()
             }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
+        } catch (throwable: Throwable) {
+            throwable.printStackTrace()
         }
 
         // Register our own reload event listener again
