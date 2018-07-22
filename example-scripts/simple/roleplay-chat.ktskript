@@ -1,0 +1,63 @@
+/*
+Commands:
+ - /ch local
+ - /ch global (whole world)
+ - /whisper
+ - /shout
+
+The distances are configurable below.
+*/
+
+object Config {
+  const val LOCAL_CHAT_DISTANCE = 10.0
+  const val WHISPER_CHAT_DISTANCE = 1.0
+  const val SHOUT_CHAT_DISTANCE = 20.0
+}
+
+fun Iterable<MessageReceiver>.send(text: Text) = forEach { it.sendMessage(text) }
+
+fun rangeChat(sender: Player, range: Double, msg: Text) {
+  val world = sender.location.extent
+  val playerPos = sender.location.position
+  val playersInRange = world
+    .getNearbyEntities(playerPos, range)
+    .mapNotNull { it as? Player }
+  playersInRange.send(msg)
+}
+
+registerCommand("ch") {
+
+  child("global") {
+    arguments(remainingStrings("msg"))
+    action(onlyPlayers = true) {
+      val msg = argument<String>("msg")
+      val fullMsg = "&7[&6${player.name} &7in global chat] ".t + msg.white()
+
+      player.location.extent.players.send(fullMsg)
+    }
+  }
+
+  child("local") {
+    arguments(remainingStrings("msg"))
+    action(onlyPlayers = true) {
+      val msg = "&7[&6${player.name} &7in local chat] ".t + argument<String>("msg").white()
+      rangeChat(sender = player, range = Config.LOCAL_CHAT_DISTANCE, msg = msg)
+    }
+  }
+}
+
+registerCommand("whisper") {
+  arguments(remainingStrings("msg"))
+    action(onlyPlayers = true) {
+      val msg = "&7[&6${player.name} &7whispers] ".t + argument<String>("msg").white()
+      rangeChat(sender = player, range = Config.WHISPER_CHAT_DISTANCE, msg = msg)
+    }
+}
+
+registerCommand("shout") {
+  arguments(remainingStrings("msg"))
+    action(onlyPlayers = true) {
+      val msg = "&7[&6${player.name} &7shouts] ".t + argument<String>("msg").white()
+      rangeChat(sender = player, range = Config.SHOUT_CHAT_DISTANCE, msg = msg)
+    }
+}
