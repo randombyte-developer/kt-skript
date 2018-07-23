@@ -1,11 +1,12 @@
 /*
 Commands:
- - /ch local
- - /ch global (whole world)
- - /whisper
- - /shout
+ - /ch local - Sets your chat to local
+ - /ch global - Sets your chat to global
+ - /whisper <msg>
+ - /shout <msg>
 
-The distances are configurable below.
+By default your channel is local. Every chat message you send is either directed through local or global chat.
+The distances for the modes are configurable below.
 */
 
 object Config {
@@ -13,6 +14,12 @@ object Config {
   const val WHISPER_CHAT_DISTANCE = 1.0
   const val SHOUT_CHAT_DISTANCE = 20.0
 }
+
+enum class ChatMode {
+  LOCAL, GLOBAL
+}
+
+val chatModes = mutableMapOf<UUID, ChatMode>()
 
 fun Iterable<MessageReceiver>.send(text: Text) = forEach { it.sendMessage(text) }
 
@@ -26,38 +33,52 @@ fun rangeChat(sender: Player, range: Double, msg: Text) {
 }
 
 registerCommand("ch") {
-
   child("global") {
-    arguments(remainingStrings("msg"))
     action(onlyPlayers = true) {
-      val msg = argument<String>("msg")
-      val fullMsg = "&7[&6${player.name} &7in global chat] ".t + msg.white()
-
-      player.location.extent.players.send(fullMsg)
+      chatModes += player.uniqueId to ChatMode.GLOBAL
+      player.sendMessage("&2Set chat mode to global!".t)
     }
   }
 
   child("local") {
-    arguments(remainingStrings("msg"))
     action(onlyPlayers = true) {
-      val msg = "&7[&6${player.name} &7in local chat] ".t + argument<String>("msg").white()
-      rangeChat(sender = player, range = Config.LOCAL_CHAT_DISTANCE, msg = msg)
+      chatModes += player.uniqueId to ChatMode.LOCAL
+      player.sendMessage("&2Set chat mode to local!".t)
     }
   }
 }
 
 registerCommand("whisper") {
   arguments(remainingStrings("msg"))
-    action(onlyPlayers = true) {
-      val msg = "&7[&6${player.name} &7whispers] ".t + argument<String>("msg").white()
-      rangeChat(sender = player, range = Config.WHISPER_CHAT_DISTANCE, msg = msg)
-    }
+  action(onlyPlayers = true) {
+    val msg = "&7[&6${player.name} &7whispers] ".t + argument<String>("msg").white()
+    rangeChat(sender = player, range = Config.WHISPER_CHAT_DISTANCE, msg = msg)
+  }
 }
 
 registerCommand("shout") {
   arguments(remainingStrings("msg"))
-    action(onlyPlayers = true) {
-      val msg = "&7[&6${player.name} &7shouts] ".t + argument<String>("msg").white()
-      rangeChat(sender = player, range = Config.SHOUT_CHAT_DISTANCE, msg = msg)
+  action(onlyPlayers = true) {
+    val msg = "&7[&6${player.name} &7shouts] ".t + argument<String>("msg").white()
+    rangeChat(sender = player, range = Config.SHOUT_CHAT_DISTANCE, msg = msg)
+  }
+}
+
+registerListener<MessageChannelEvent.Chat> {
+  if (causedByPlayer) {
+    val currentChatMode = chatModes[causingPlayer.uniqueId] ?: ChatMode.LOCAL
+
+    when(currentChatMode) {
+      ChatMode.GLOBAL -> {
+        cancelEvent()
+        val fullMsg = "&7[&6${causingPlayer.name} &7in global chat] ".t + rawMessage.white()
+        causingPlayer.location.extent.players.send(fullMsg)
+      }
+      ChatMode.LOCAL -> {
+        cancelEvent()
+        val fullMsg = "&7[&6${causingPlayer.name} &7in local chat] ".t + rawMessage.white()
+        rangeChat(sender = causingPlayer, range = Config.LOCAL_CHAT_DISTANCE, msg = fullMsg)
+      }
     }
+  }
 }
