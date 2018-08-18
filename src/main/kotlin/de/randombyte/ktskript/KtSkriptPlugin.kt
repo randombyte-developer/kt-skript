@@ -40,7 +40,7 @@ class KtSkriptPlugin @Inject constructor(
     companion object {
         const val ID = "kt-skript"
         const val NAME = "KtSkript"
-        const val VERSION = "1.1.2"
+        const val VERSION = "1.1.3"
         const val AUTHOR = "RandomByte"
 
         const val DEFAULT_IMPORTS_FILE_NAME = "default.imports"
@@ -62,6 +62,8 @@ class KtSkriptPlugin @Inject constructor(
 
     @Listener
     fun onInit(event: GameInitializationEvent) {
+        System.setProperty("idea.use.native.fs.for.win", "false")
+
         reload()
         logger.info("Loaded $NAME: $VERSION")
     }

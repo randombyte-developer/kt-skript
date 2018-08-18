@@ -43,7 +43,7 @@ fun onBlockPlace(executor: ChangeBlockEvent.Place.() -> Unit) = registerListener
 
 // ENTITIES
 
-fun onEntitySpawn(executor: SpawnEntityEvent.ChunkLoad.() -> Unit) = registerListener(executor)
+fun onEntitySpawn(executor: SpawnEntityEvent.() -> Unit) = registerListener(executor)
 
 fun onEntityDamage(executor: DamageEntityEvent.() -> Unit) = registerListener(executor)
 
