@@ -1,0 +1,10 @@
+val staffMembers = listOf(
+  "KitCrafty",
+  "Notch"
+)
+
+onPlayerJoin {
+  if (player.name in staffMembers) {
+    setMessage("&2The legendary ${player.name} has joined the server!".t)
+  }
+}
