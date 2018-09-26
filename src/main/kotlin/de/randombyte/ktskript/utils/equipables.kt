@@ -4,9 +4,10 @@ import org.spongepowered.api.data.type.HandType
 import org.spongepowered.api.data.type.HandTypes
 import org.spongepowered.api.data.type.HandTypes.MAIN_HAND
 import org.spongepowered.api.entity.Equipable
+import org.spongepowered.api.item.inventory.ItemStack
 import org.spongepowered.api.item.inventory.equipment.EquipmentTypes
 
-fun Equipable.hasItemInHand(handType: HandType = MAIN_HAND) = getEquipped(handType.equipmentType).isPresent
+fun Equipable.hasItemInHand(handType: HandType = MAIN_HAND) = !getEquipped(handType.equipmentType).orElse(ItemStack.empty()).isEmpty
 
 @Deprecated("The Sponge native method takes priority over this extension function.")
 fun Equipable.getItemInHand(handType: HandType = MAIN_HAND) = getEquipped(handType.equipmentType).orElseThrow {
