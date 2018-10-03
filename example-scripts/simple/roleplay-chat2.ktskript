@@ -1,0 +1,18 @@
+val SHOUTING_PREFIX = "!"
+
+registerListener<MessageChannelEvent.Chat> {
+
+  val isShouting = rawMessage.toPlain().startsWith(SHOUTING_PREFIX)
+
+  val range = if (isShouting) 100 else 50
+  val playerLoc = causingPlayer.location
+  val targetedPlayers = playerLoc.extent
+    .getNearbyEntities(playerLoc.position, range.toDouble())
+    .mapNotNull { it as? Player }
+  setChannel(MessageChannel.fixed(targetedPlayers))
+
+  formatter.setBody(rawMessage.toPlain().removePrefix(SHOUTING_PREFIX).toText())
+  
+  val prefix = if (isShouting) "&7[&aShout&7] ".t else "&7[&aLocal&7] ".t
+  formatter.setHeader(prefix + formatter.header.toText())
+}
