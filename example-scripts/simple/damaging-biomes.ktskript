@@ -1,0 +1,18 @@
+val damagingBiomes = listOf(BiomeTypes.TAIGA, BiomeTypes.TAIGA_HILLS)
+
+val damageSource = DamageSource.builder()
+  .type(DamageTypes.CUSTOM)
+  .build()
+
+Task.builder()
+  .intervalTicks(20 * 10)
+  .execute { task ->
+    Server.onlinePlayers
+      .filter { player ->
+        player.location.hasBiome() && player.location.biome in damagingBiomes
+      }
+      .forEach { player ->
+        player.damage(1.0, damageSource)
+      }
+  }
+  .submit(KtSkript)

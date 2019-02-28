@@ -1,0 +1,20 @@
+val replacements = mapOf(
+
+  "minecraft:log" to "minecraft:diamond",
+  "minecraft:stone" to "minecraft:gold_ingot"
+
+).mapValues { (_, itemTypeId) ->
+  ItemStack.of(Sponge.getRegistry().getType(ItemType::class.java, itemTypeId).get(), 1).createSnapshot()
+}
+
+registerListener<SpawnEntityEvent> {
+  entities
+    .filter { it is Item }
+    .forEach { item ->
+      if (context.get(EventContextKeys.SPAWN_TYPE).orNull() == SpawnTypes.DROPPED_ITEM) {
+        val brokenBlockSnapshot = context.get(EventContextKeys.BLOCK_HIT).orNull() ?: return@forEach
+        val replacement = replacements[brokenBlockSnapshot.state.type.id] ?: return@forEach
+        item.tryOffer(Keys.REPRESENTED_ITEM, replacement)
+      }
+    }
+}
