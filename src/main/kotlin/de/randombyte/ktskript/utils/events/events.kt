@@ -9,6 +9,10 @@ import org.spongepowered.api.event.Event
 import org.spongepowered.api.event.block.ChangeBlockEvent
 import org.spongepowered.api.event.block.InteractBlockEvent
 import org.spongepowered.api.event.entity.*
+import org.spongepowered.api.event.game.state.GameStartedServerEvent
+import org.spongepowered.api.event.game.state.GameStartingServerEvent
+import org.spongepowered.api.event.game.state.GameStoppedServerEvent
+import org.spongepowered.api.event.game.state.GameStoppingServerEvent
 import org.spongepowered.api.event.network.ClientConnectionEvent
 
 fun <T : Event> registerListener(eventClass: Class<T>, executor: (T) -> Unit) {
@@ -62,6 +66,16 @@ fun onPlayerLeave(executor: ClientConnectionEvent.Disconnect.() -> Unit) = regis
 fun onPlayerDamage(executor: DamageEntityEvent.() -> Unit) = onEntityDamage { if (targetEntity is Player) executor() }
 
 fun onPlayerDeath(executor: DestructEntityEvent.Death.() -> Unit) = onEntityDeath { if (targetEntity is Player) executor() }
+
+// SERVER
+
+fun onServerStarting(executor: GameStartingServerEvent.() -> Unit) = registerListener(executor)
+
+fun onServerStarted(executor: GameStartedServerEvent.() -> Unit) = registerListener(executor)
+
+fun onServerStopping(executor: GameStoppingServerEvent.() -> Unit) = registerListener(executor)
+
+fun onServerStopped(executor: GameStoppedServerEvent.() -> Unit) = registerListener(executor)
 
 // OTHERS
 

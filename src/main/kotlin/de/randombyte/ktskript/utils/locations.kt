@@ -1,5 +1,6 @@
 package de.randombyte.ktskript.utils
 
+import org.spongepowered.api.entity.Entity
 import org.spongepowered.api.world.Locatable
 import org.spongepowered.api.world.Location
 import org.spongepowered.api.world.World
@@ -12,4 +13,10 @@ fun <T : Locatable> Iterable<T>.getNearest(location: Location<World>): T? = filt
     it.location.extent.uniqueId == location.extent.uniqueId
 }.minBy {
     it.location.position.distance(location.position)
+}
+
+fun Location<out Extent>.getNearbyEntities(distance: Double) = extent.getNearbyEntities(position, distance)
+
+inline fun <reified T : Entity> Location<out Extent>.getNearbyEntitiesOfType(distance: Double): List<Entity> {
+    return extent.getNearbyEntities(position, distance).filter { it is T }
 }
