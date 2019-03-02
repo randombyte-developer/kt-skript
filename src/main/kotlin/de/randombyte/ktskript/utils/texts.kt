@@ -62,11 +62,13 @@ fun Text.sendTo(vararg messageChannels: MessageChannel) {
 
 fun Iterable<Text>.sendTo(vararg messageChannels: MessageChannel) = forEach { it.sendTo(*messageChannels) }
 
-fun Text.sendTo(vararg receivers: MessageReceiver) {
+fun Text.sendTo(vararg receivers: MessageReceiver) = sendTo(receivers.asIterable())
+fun Text.sendTo(receivers: Iterable<MessageReceiver>) {
     if (!isEmpty) receivers.forEach { it.sendMessage(this) }
 }
 
-fun Iterable<Text>.sendTo(vararg receivers: MessageReceiver) = forEach { it.sendTo(*receivers) }
+fun Iterable<Text>.sendTo(vararg receivers: MessageReceiver) = sendTo(receivers.asIterable())
+fun Iterable<Text>.sendTo(receivers: Iterable<MessageReceiver>) = forEach { it.sendTo(receivers) }
 
 fun Text.broadcast() = sendTo(Sponge.getServer().broadcastChannel)
 fun Iterable<Text>.broadcast() = sendTo(Sponge.getServer().broadcastChannel)

@@ -17,6 +17,6 @@ fun <T : Locatable> Iterable<T>.getNearest(location: Location<World>): T? = filt
 
 fun Location<out Extent>.getNearbyEntities(distance: Double) = extent.getNearbyEntities(position, distance)
 
-inline fun <reified T : Entity> Location<out Extent>.getNearbyEntitiesOfType(distance: Double): List<Entity> {
-    return extent.getNearbyEntities(position, distance).filter { it is T }
+inline fun <reified T : Entity> Location<out Extent>.getNearbyEntitiesOfType(distance: Double): List<T> {
+    return extent.getNearbyEntities(position, distance).mapNotNull { it as? T }
 }
