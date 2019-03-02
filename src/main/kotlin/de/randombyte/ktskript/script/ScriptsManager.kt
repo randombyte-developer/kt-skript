@@ -2,6 +2,7 @@ package de.randombyte.ktskript.script
 
 import de.randombyte.ktskript.utils.KtSkript
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner
+import io.github.lukehutch.fastclasspathscanner.scanner.ScanResult
 import java.io.File
 import java.nio.file.Path
 import javax.script.CompiledScript
@@ -33,18 +34,20 @@ class ScriptsManager {
     /**
      * @return Import statements for all classes from the packages specified in the given [file]
      */
-    fun loadImportsFromFile(file: File, verbose: Boolean): String {
-        val packagePrefixes = file
-                .readLines()
-                .filter { it.isNotBlank() }
-                .toTypedArray()
+    fun scanClasspath(wantedImports: List<String>, verbose: Boolean): ScanResult =
+            FastClasspathScanner(*wantedImports.toTypedArray())
+                    .verbose(verbose)
+                    .overrideClasspath(allClasspathFiles.value)
+                    .alwaysScanClasspathElementRoot(false)
+                    .strictWhitelist()
+                    .scan()
 
-        val classPathImportPackages = FastClasspathScanner(*packagePrefixes)
-                .verbose(verbose)
-                .overrideClasspath(allClasspathFiles.value)
-                .alwaysScanClasspathElementRoot(false)
-                .strictWhitelist()
-                .scan()
+    fun readWantedImports(file: File) = file
+            .readLines()
+            .filter { it.isNotBlank() }
+
+    fun generateImportsFromScanResult(scanResult: ScanResult): String {
+        val classPathImportPackages = scanResult
                 .namesOfAllClasses
                 .map { it.substringBeforeLast(".") } // snip away class name
                 .filter { it.isNotEmpty() }
@@ -63,18 +66,8 @@ class ScriptsManager {
      * @param path [Path] to the root config dir
      */
     fun loadGlobalImports(path: Path, verbose: Boolean) {
-        globalImports += loadImportsFromFile(path.resolve("default.imports").toFile(), verbose)
+        globalImports += generateImportsFromScanResult(scanClasspath(readWantedImports(path.resolve("default.imports").toFile()), verbose))
     }
-
-    /**
-     * Loads all classes from the packages specified in the given [file] which should point to the
-     * script specific ".imports" file.
-     *
-     * @param file [Path] to the ".imports" file
-     *
-     * @return all import statements from the file
-     */
-    fun loadScriptSpecificImports(file: File, verbose: Boolean): String = loadImportsFromFile(file, verbose)
 
     /**
      * @return the successfully read scripts
@@ -117,9 +110,11 @@ class ScriptsManager {
                 .map { (id, file, scriptContent) ->
 
                     val importsFile = File(file.parent, file.nameWithoutExtension + ".imports")
-                    val scriptSpecificImports: String? = if (importsFile.exists() && importsFile.isFile) {
-                        loadScriptSpecificImports(importsFile, verbose = generalConfig.verboseClasspathScanner)
+                    val classpathScanResult = if (importsFile.exists() && importsFile.isFile) {
+                        scanClasspath(readWantedImports(importsFile), verbose = generalConfig.verboseClasspathScanner)
                     } else null
+
+                    val scriptSpecificImports = classpathScanResult?.let { generateImportsFromScanResult(it) }
 
                     val scriptString = """
                         $globalImports
@@ -132,13 +127,13 @@ class ScriptsManager {
                         KtSkript.logger.info("Script '$id':\n$scriptString")
                     }
 
-                    Triple(id, file, scriptString)
+                    Quadruple(id, file, scriptString)
                 }
                 // compile script
                 .mapNotNull { (id, file, scriptString) ->
                     val compiledScript = try {
                         // reset engine because there might be errors from previous scripts
-                        val scriptEngine = newEngine(allClasspathFiles.value)
+                        val scriptEngine = newEngine(getClasspathFilesForScript())
                         scriptEngine.compile(scriptString)
                     } catch (throwable: Throwable) {
                         KtSkript.logger.error("Ignoring faulty script '$id' at '${file.absolutePath}'!", throwable)

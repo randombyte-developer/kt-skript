@@ -2,7 +2,11 @@ package de.randombyte.ktskript.utils.commands
 
 import de.randombyte.ktskript.utils.t
 import org.spongepowered.api.CatalogType
+import org.spongepowered.api.command.args.CommandElement
+import org.spongepowered.api.command.args.GenericArguments
 import org.spongepowered.api.command.args.GenericArguments.*
+
+fun optional(element: CommandElement) = GenericArguments.optional(element)
 
 fun boolean(key: String) = bool(key.t)
 
