@@ -1,0 +1,5 @@
+onEvery("5m") {
+  val message = "&4Please vote for this server here: ".t +
+    "&e[VOTE]".t.action(TextActions.openUrl(URL("https://www.example.com")))
+  message.broadcast()
+}
