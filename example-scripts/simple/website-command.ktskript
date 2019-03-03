@@ -1,0 +1,15 @@
+registerCommand("website") {
+  action(onlyPlayers = true) {
+    val text = "&2This is a link to our website: ".t +
+      "&e[Click here]".t.underline().action(TextActions.openUrl(URL("https://www.example.com")))
+    text.sendTo(player)
+  }
+}
+
+registerCommand("vote") {
+  action(onlyPlayers = true) {
+    val text = "Vote-Link: ".t +
+      "&b[Vote]".t.underline().action(TextActions.openUrl(URL("https://www.example.com")))
+    text.sendTo(player)
+  }
+}
