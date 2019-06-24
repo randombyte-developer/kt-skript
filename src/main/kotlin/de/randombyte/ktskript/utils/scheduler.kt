@@ -6,13 +6,13 @@ import java.util.concurrent.TimeUnit
 fun delayTicks(ticks: Number, action: () -> Unit) {
     Task.builder()
             .delayTicks(ticks.toLong())
-            .execute { -> action() } // to allow the action to return something which gets ignored
+            .execute { -> action() }
             .submit(KtSkript)
 }
 
 fun delayMillis(millis: Number, action: () -> Unit) {
     Task.builder()
-            .delayTicks(millis.toLong())
+            .delay(millis.toLong(), TimeUnit.MILLISECONDS)
             .execute { -> action() }
             .submit(KtSkript)
 }
