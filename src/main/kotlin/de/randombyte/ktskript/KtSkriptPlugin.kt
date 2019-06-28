@@ -8,22 +8,27 @@ import de.randombyte.ktskript.KtSkriptPlugin.Companion.VERSION
 import de.randombyte.ktskript.config.ConfigAccessors
 import de.randombyte.ktskript.script.ScriptsManager
 import de.randombyte.ktskript.script.UnloadScriptsEvent
-import de.randombyte.ktskript.utils.CommandManager
-import de.randombyte.ktskript.utils.EventManager
-import de.randombyte.ktskript.utils.Scheduler
+import de.randombyte.ktskript.utils.*
+import org.apache.commons.lang3.RandomUtils
 import org.bstats.sponge.Metrics
 import org.slf4j.Logger
+import org.spongepowered.api.Sponge
 import org.spongepowered.api.config.ConfigDir
+import org.spongepowered.api.entity.living.player.Player
 import org.spongepowered.api.event.Listener
 import org.spongepowered.api.event.cause.Cause
 import org.spongepowered.api.event.cause.EventContext
 import org.spongepowered.api.event.game.GameReloadEvent
 import org.spongepowered.api.event.game.state.GameInitializationEvent
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent
+import org.spongepowered.api.event.network.ClientConnectionEvent
 import org.spongepowered.api.plugin.Plugin
 import org.spongepowered.api.plugin.PluginContainer
+import org.spongepowered.api.scheduler.Task
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Plugin(
         id = ID,
@@ -40,7 +45,7 @@ class KtSkriptPlugin @Inject constructor(
     companion object {
         const val ID = "kt-skript"
         const val NAME = "KtSkript"
-        const val VERSION = "1.2.1"
+        const val VERSION = "1.3.0"
         const val AUTHOR = "RandomByte"
 
         const val DEFAULT_IMPORTS_FILE_NAME = "default.imports"
@@ -65,6 +70,14 @@ class KtSkriptPlugin @Inject constructor(
         System.setProperty("idea.use.native.fs.for.win", "false")
 
         reload()
+
+        if (needsMotivationalSpeech()) {
+            Task.builder()
+                    .delay(RandomUtils.nextLong(80, 130), TimeUnit.SECONDS)
+                    .execute { -> Texts.motivationalSpeech.forEach { it.sendTo(Sponge.getServer().console) } }
+                    .submit(this)
+        }
+
         logger.info("Loaded $NAME: $VERSION")
     }
 
@@ -94,6 +107,9 @@ class KtSkriptPlugin @Inject constructor(
         }
     }
 
+    /**
+     * Unregisters mostly everything which was set up by scripts, and by this plugin as well
+     */
     private fun tidyUp() {
         CommandManager.getOwnedBy(this).map(CommandManager::removeMapping)
         EventManager.unregisterPluginListeners(this)
@@ -139,4 +155,26 @@ class KtSkriptPlugin @Inject constructor(
             pluginContainer.getAsset(DEFAULT_IMPORTS_FILE_NAME).get().copyToDirectory(configPath, true)
         }
     }
+
+
+    val metricsNoteSent = mutableSetOf<UUID>()
+
+    @Listener
+    fun onPlayerJoin(event: ClientConnectionEvent.Join) {
+        val uuid = event.targetEntity.uniqueId
+        if (needsMotivationalSpeech(event.targetEntity)) {
+            Task.builder()
+                    .delay(RandomUtils.nextLong(10, 50), TimeUnit.SECONDS)
+                    .execute { ->
+                        val player = uuid.getPlayer() ?: return@execute
+                        metricsNoteSent += uuid
+                        Texts.motivationalSpeech.forEach { it.sendTo(player) }
+                    }
+                    .submit(this)
+        }
+    }
+
+    private fun needsMotivationalSpeech(player: Player? = null) = configAccessors.general.get().enableMetricsMessages &&
+            !Sponge.getMetricsConfigManager().areMetricsEnabled(this) &&
+            ((player == null) || player.uniqueId !in metricsNoteSent && player.hasPermission("nucleus.mute.base")) // also passes OPs without Nucleus
 }
