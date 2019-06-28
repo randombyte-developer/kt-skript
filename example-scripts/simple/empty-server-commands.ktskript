@@ -1,0 +1,14 @@
+var delayTask: Task? = null
+
+onPlayerLeave {
+  // the currently leaving player is at the time of this check technically still on the server
+  if (Server.onlinePlayers.size == 1) {
+    delayTask = delay("5m") {
+      Server.console.executeCommand("say Yep, this server is empty!")
+    }
+  }
+}
+
+onPlayerJoin {
+  delayTask?.cancel()
+}

@@ -1,0 +1,14 @@
+val taxPercentage = 0.19
+
+onEvery("1h") {
+  val account = EconomyService.getAccount("bank-account")
+
+  // calculate tax
+  val tax = account.balance * taxPercentage
+  // withdraw tax
+  account.balance -= tax
+  // deposit tax somewhere else
+  EconomyService.getAccount("some-other-account").balance += tax
+
+  "${tax.toInt()} coins just got moved somewhere else!".t.broadcast()
+}
