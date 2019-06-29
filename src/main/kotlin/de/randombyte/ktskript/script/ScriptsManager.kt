@@ -2,6 +2,7 @@ package de.randombyte.ktskript.script
 
 import de.randombyte.ktskript.utils.KtSkript
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner
+import org.jetbrains.kotlin.utils.PathUtil
 import java.io.File
 import java.nio.file.Path
 import javax.script.CompiledScript
@@ -19,7 +20,14 @@ class ScriptsManager {
     class InternalScript(val path: Path, val compiledScript: CompiledScript)
     val scripts: MutableMap<String, InternalScript> = mutableMapOf()
 
-    private val allClasspathFiles = lazy { getAsMuchClasspathAsPossible().map { it.absoluteFile } }
+    val allClasspathFiles = lazy {
+        val classpathFile = KtSkript.configPath.resolve("classpath.txt").toFile()
+        return@lazy (if (classpathFile.exists()) {
+            PathUtil.getJdkClassesRootsFromCurrentJre() + classpathFile.readLines().filter { it.isNotBlank() }.map { File(it) }
+        } else {
+            getAsMuchClasspathAsPossible()
+        }).map { it.absoluteFile }
+    }
 
     private fun newEngine(templateClasspath: List<File>) = MyKotlinJsr223JvmLocalScriptEngineFactory(templateClasspath).scriptEngine
 

@@ -5,10 +5,13 @@ import de.randombyte.ktskript.KtSkriptPlugin.Companion.AUTHOR
 import de.randombyte.ktskript.KtSkriptPlugin.Companion.ID
 import de.randombyte.ktskript.KtSkriptPlugin.Companion.NAME
 import de.randombyte.ktskript.KtSkriptPlugin.Companion.VERSION
+import de.randombyte.ktskript.commands.LogClasspathFilesCommand
 import de.randombyte.ktskript.config.ConfigAccessors
 import de.randombyte.ktskript.script.ScriptsManager
 import de.randombyte.ktskript.script.UnloadScriptsEvent
 import de.randombyte.ktskript.utils.*
+import de.randombyte.ktskript.utils.commands.child
+import de.randombyte.ktskript.utils.commands.registerCommand
 import org.apache.commons.lang3.RandomUtils
 import org.bstats.sponge.Metrics
 import org.slf4j.Logger
@@ -37,7 +40,7 @@ import java.util.concurrent.TimeUnit
         authors = [AUTHOR])
 class KtSkriptPlugin @Inject constructor(
         val logger: Logger,
-        @ConfigDir(sharedRoot = false) private val configPath: Path,
+        @ConfigDir(sharedRoot = false) val configPath: Path,
         private val bStats: Metrics,
         private val pluginContainer: PluginContainer
 ) {
@@ -47,6 +50,8 @@ class KtSkriptPlugin @Inject constructor(
         const val NAME = "KtSkript"
         const val VERSION = "1.3.0"
         const val AUTHOR = "RandomByte"
+
+        const val ROOT_PERMISSION = ID
 
         const val DEFAULT_IMPORTS_FILE_NAME = "default.imports"
     }
@@ -136,14 +141,24 @@ class KtSkriptPlugin @Inject constructor(
             throwable.printStackTrace()
         }
 
-        // Register our own reload event listener again
+        // Register our own reload event listener and the commands again
         EventManager.registerListeners(this, this)
+        registerCommands()
 
         logger.info("Loaded ${scriptsManager.scripts.size} script(s).")
     }
 
     private fun postUnloadScriptsEvent() {
         EventManager.post(UnloadScriptsEvent(scriptsManager.scripts.keys.toList(), cause))
+    }
+
+    private fun registerCommands() {
+        registerCommand("ktskript") {
+            child("logclasspath") {
+                permission(ROOT_PERMISSION)
+                executor(LogClasspathFilesCommand())
+            }
+        }
     }
 
     /**
