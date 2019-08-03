@@ -16,7 +16,7 @@ fun <T : ForgeEvent> registerForgeListener(
       filterCanceled == Tristate.UNDEFINED -> true
       filterCanceled == Tristate.FALSE && !event.isCanceled -> true
       filterCanceled == Tristate.TRUE && event.isCanceled -> true
-     else -> false
+      else -> false
     }
 
     if (passedCancellationFilter) {
