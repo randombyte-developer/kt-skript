@@ -23,7 +23,7 @@ fun command(commandBuilder: CommandSpec.Builder.() -> Unit): CommandSpec {
 
 fun CommandSpec.Builder.child(vararg names: String, commandBuilder: CommandSpec.Builder.() -> Unit) = child(command(commandBuilder), *names)
 
-fun CommandSpec.Builder.action(onlyPlayers: Boolean = false, executor: CommandExecutorContext.() -> Any) {
+fun CommandSpec.Builder.action(onlyPlayers: Boolean = false, executor: CommandExecutorContext.() -> Unit) {
     executor { src, args ->
         if (onlyPlayers && src !is Player) throw CommandException("Command must be executed by a player!".t)
         val result = executor(CommandExecutorContext(src, args))
