@@ -21,21 +21,14 @@ registerCommand("buy") {
       commandError("Can't buy this item!".t)
     }
 
-    if (!EconomyService::class.available) {
-      commandError("No economy plugin loaded!".t)
-    }
-
-    val ecoService = EconomyService::class.service
-
     val acc = player.economyAccount
-    val bal = acc.getBalance(ecoService.defaultCurrency)
-    val costs = offers[itemType]!!
+    val costs = offers[itemType]!! * amount
 
-    if (bal < costs) {
+    if (acc.balance < costs) {
       commandError("You don't have enough money to buy that!".t)
     }
 
-    acc.withdraw(ecoService.defaultCurrency, costs, KtSkript.cause)
+    acc.balance -= costs
 
     val itemStack = ItemStack.of(itemType, amount)
     player.give(itemStack)

@@ -7,8 +7,7 @@ onBlockBreak {
 
           val moneyAmount = randomInt(start = 300, end = 500)
 
-          val eco = EconomyService::class.service
-          causingPlayer.economyAccount.deposit(eco.defaultCurrency, moneyAmount.toBigDecimal(), KtSkript.cause)
+          causingPlayer.economyAccount.balance += moneyAmount.toBigDecimal()
 
           causingPlayer.sendMessage("You found $moneyAmount coins!".green())
         }
