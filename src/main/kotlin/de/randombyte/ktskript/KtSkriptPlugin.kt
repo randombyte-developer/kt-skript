@@ -45,7 +45,7 @@ class KtSkriptPlugin @Inject constructor(
     companion object {
         const val ID = "kt-skript"
         const val NAME = "KtSkript"
-        const val VERSION = "1.3.1"
+        const val VERSION = "1.4.0"
         const val AUTHOR = "RandomByte"
 
         const val DEFAULT_IMPORTS_FILE_NAME = "default.imports"
