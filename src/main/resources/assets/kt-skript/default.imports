@@ -12,3 +12,4 @@ de.randombyte.ktskript
 -de.randombyte.ktskript.shaded
 
 org.spongepowered.api
+com.flowpowered.math
