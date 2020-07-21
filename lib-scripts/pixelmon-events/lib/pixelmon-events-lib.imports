@@ -1,0 +1,7 @@
+kotlin.reflect
+
+net.minecraftforge.common
+net.minecraftforge.event
+net.minecraftforge.fml.common.eventhandler
+
+com.pixelmonmod.pixelmon.Pixelmon

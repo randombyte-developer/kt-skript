@@ -1,0 +1,43 @@
+/*===============================================*
+ *                                               *
+ *        Configure Pixelmon Event library       *
+ *                                               *   
+ *===============================================*/
+
+// Define alias for Forge Event for convinience
+typealias ForgeEvent = net.minecraftforge.fml.common.eventhandler.Event
+
+// load lib
+val pixelmonEventsLibId = "pixelmon-events-lib"
+val pixelmonEventsLibPath = script.path.parent.resolve(pixelmonEventsLibId + ".ktskript")
+val scripts = script.compile(pixelmonEventsLibPath)
+val pixelmonEventsLibScript = scripts[pixelmonEventsLibId] ?: throw RuntimeException("$pixelmonEventsLibId not found!")
+
+val pixelmonEventsLibFunctions = pixelmonEventsLibScript.compiledScript.eval() as Map<String, Function<*>>
+
+// extract the functions into lambdas
+val registerPixelmonListenerLambda: (eventClass: Class<out ForgeEvent>, priority: EventPriority, filterCanceled: Tristate, listener: Function1<in ForgeEvent, Unit>) -> IEventListener =
+  pixelmonEventsLibFunctions["registerPixelmonListener"]!! as Function4<Class<out ForgeEvent>, EventPriority, Tristate, Function1<ForgeEvent, Unit>, IEventListener>
+
+val unregisterPixelmonEvent: (listener: IEventListener) -> Unit =
+  pixelmonEventsLibFunctions["unregisterPixelmonListener"]!! as Function1<IEventListener, Unit>
+
+// wrap this specific lambda into a function to get generics, this is not needed but nice for compile time type safety
+inline fun <reified T : ForgeEvent> registerPixelmonEvent(
+  priority: EventPriority = EventPriority.NORMAL,
+  isCancelled: Tristate = Tristate.FALSE,
+  noinline executor: T.() -> Unit
+): IEventListener = registerPixelmonListenerLambda(T::class.java, priority, isCancelled, executor as Function1<ForgeEvent, Unit>)
+
+
+// =============== Script starts here =============== //
+
+var listener = registerPixelmonEvent<LegendarySpawnEvent> {
+    Server.console.executeCommand("say ${this.getLegendary()} has spawned")
+}
+
+onScriptsUnload {
+  if (script.id in scripts) {
+    unregisterPixelmonEvent(listener)
+  }
+}

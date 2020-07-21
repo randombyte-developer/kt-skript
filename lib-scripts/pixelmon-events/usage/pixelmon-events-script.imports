@@ -1,0 +1,4 @@
+net.minecraftforge.event
+net.minecraftforge.fml.common.eventhandler
+
+com.pixelmonmod.pixelmon.api.events.spawning.LegendarySpawnEvent
